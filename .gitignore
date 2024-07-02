@@ -1,0 +1,9 @@
+_activate.au3
+_Launcher.bat
+_cmd.bat
+_WorkDir/*
+.idea/*
+venv/*
+Include/*
+Lib/*
+Scripts/*
