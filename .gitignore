@@ -8,3 +8,6 @@ venv/*
 Include/*
 Lib/*
 Scripts/*
+data/playersbkp.json
+data/tournaments/*
+data/pending_tournament.json
