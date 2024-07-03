@@ -13,7 +13,7 @@ You can also generate all sorts of reports to visualise your database and other 
 Having Python 3 installed  
 Download the project somewhere on your drive  
 . unzip the downloaded project archive  
-. or use this command line :
+. or use this command line :  
 git clone https://github.com/SachaaBoris/OC_04_ChessTournament.git path\to\your\folder\here  
 Navigate to this folder within your favourite console and type : py -m venv ./venv  
 Activate your virtual environment by typing : venv\Scripts\activate  
