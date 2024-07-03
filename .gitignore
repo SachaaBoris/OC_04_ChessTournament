@@ -11,3 +11,4 @@ Scripts/*
 data/playersbkp.json
 data/tournaments/*
 data/pending_tournament.json
+data/players.json
