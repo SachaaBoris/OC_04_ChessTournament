@@ -14,13 +14,15 @@ Having Python 3 installed
 Download the project somewhere on your drive  
 . unzip the downloaded project archive  
 . or use this command line :  
+```
 git clone https://github.com/SachaaBoris/OC_04_ChessTournament.git path\to\your\folder\here  
-Navigate to this folder within your favourite console and type : py -m venv ./venv  
-Activate your virtual environment by typing : venv\Scripts\activate  
-Apply the projects requirements by typing : py -m  pip install -r requirements.txt  
+```
+Navigate to this folder within your favourite console and type : `py -m venv ./venv`  
+Activate your virtual environment by typing : `venv\Scripts\activate`  
+Apply the projects requirements by typing : `py -m  pip install -r requirements.txt`  
 
 2. Run the script.  
-In your console, still in the script's folder, execute the script with this command : main.py  
+In your console, still in the script's folder, execute the script with this command : `main.py`  
   
 ---  
   
