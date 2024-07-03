@@ -1,5 +1,6 @@
 from views.views import MainView
 from controllers import main_controller
+from models.players_models import PlayerModel
 
 class ReportController:
     '''Contrôleur de gestion des rapports'''
@@ -34,3 +35,10 @@ class ReportController:
                 # Invalid input
                 invalid_input = 1
                 MainView().invalid_input(0)
+    
+    def list_all_players():
+        MainView.clear_screen()
+        MainView().menu_header(8)
+        players_list = PlayerModel.list_players()
+        MainView().report_player_list(players_list)
+        MainView().user_prompts(4)

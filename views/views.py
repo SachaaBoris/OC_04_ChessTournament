@@ -1,7 +1,10 @@
 import os
 import time
+from prettytable import PrettyTable
 
 class MainView:
+    ''' Vue principale '''
+
     def clear_screen():
         os.system('cls' if os.name == 'nt' else 'clear')
     
@@ -73,7 +76,7 @@ class MainView:
     def pick_option(self):
         return input("Sélectionnez une option: ")
     
-    def invalid_input(self, index):
+    def invalid_input(self, index, values):
         texts = {
             0: "Veuillez entrer le nombre indiqué pour la catégorie souhaitée.",
             1: "Le prénom ne peut contenir que des lettres et des tirets.",
@@ -82,56 +85,74 @@ class MainView:
             4: "Nos amis vampires, momies, squelettes ou autres zombies ne sont pas admis aux tournois de notre club.",
             5: "Les enfants en dessous de quatre ans ne sont pas admis aux tournois de notre club.",
             6: "L'ID est composé de 2 lettres suivies de 5 chiffres.",
-            7: "Le nom du tournoi ne peut pas être vide.",
-            8: "La ville ne peut pas être vide.",
-            9: "Le nombre de rounds doit être un nombre pair entier.",
-            10: "Les scores doivent être des nombres [0, 0.5, 1].",
-            11: "Veuillez répondre 'o' / 'n' ou 'y' / 'n'."
+            7: "Le nombre de joueurs doit être un nombre valide et être pair.",
+            8: "Veuillez répondre 'o' / 'n' ou 'y' / 'n'.",
+            9: "Le nom du tournoi ne peut pas être vide.",
+            10: "La ville ne peut pas être vide.",
+            11: "Le nombre de rounds doit être un nombre entier compris entre 1 et 20",
+            12: "Les scores doivent être des nombres [0, 0.5, 1]."
         }
         message = texts.get(index, "Invalid index")
         print(message)
     
-    def notify_alert(self, index):
+    def notify_alert(self, index, values):
         texts = {
             0: "Ajout impossible, cet ID existe déjà dans la base de données.",
             1: "Modification impossible, cet ID existe déjà dans la base de données.",
-            2: "Un tournoi est déjà en cours, cette action va l'écraser.",
-            3: "Attention, générer un tournoi aléatoire va ajouter des joueurs aléatoires à votre BDD de joueurs.",
-            4: "Aucun nouveau tournoi / tournoi en cours n'a été trouvé, veuillez en créer un.",
-            5: "Action impossible, aucun joueur enregistré.",
-            6: "Action impossible, aucun tournoi n'a encore eu lieu.",
-            7: "Action impossible, aucun round de ce tournoi n'est terminé.",
-            8: "Action impossible, aucun match de ce tournoi n'a encore eu lieu.",
-            9: "Joueur-euse ajouté avec succès.",
-            10: "Tournoi créé avec succès."
+            2: "Joueur-euse ajouté avec succès.",
+            3: "Aucun joueur enregistré avec cet ID.",
+            4: "Joueur-euse modifié avec succès.",
+            5: "Un tournoi est déjà en cours, cette action va l'écraser.",
+            6: "Attention, générer un tournoi aléatoire va ajouter des joueurs aléatoires à votre BDD de joueurs.",
+            7: f"Ajout du joueur {values[0]}/{values[1]}",
+            8: f"Génération impossible, le fichier {values[0]} à été déplacé.",
+            9: "Tournoi créé avec succès.",
+            10: "Aucun nouveau tournoi / tournoi en cours n'a été trouvé, veuillez en créer un.",
+            11: "Action impossible, aucun joueur enregistré.",
+            12: "Action impossible, aucun tournoi n'a encore eu lieu.",
+            13: "Action impossible, aucun round de ce tournoi n'est terminé.",
+            14: "Action impossible, aucun match de ce tournoi n'a encore eu lieu."  
         }
         message = texts.get(index, "Invalid alert index")
         print(message)
     
-    def user_prompts(self, index):
+    def user_prompts(self, index, values):
         prompts = {
-            0: "ID : ",
-            1: "Prénom : ",
-            2: "Nom : ",
-            3: "Date de naissance YYYY MM DD : ",
-            4: "Appuyez sur entrée pour revenir au menu précédent."
+            0: "Appuyez sur entrée pour revenir au menu précédent.",
+            1: "ID : ",
+            2: "Prénom : ",
+            3: "Nom : ",
+            4: "Date de naissance YYYY MM DD : ",
+            5: "Êtes-vous sûr de vouloir faire cela ? ",
+            6: "Combien de joueurs participent au tournoi : ",
+            7: "Voulez-vous générer un tournoi aléatoire avec des joueurs aléatoires ? ",
+            8: "Quelque chose à mal tourné, retour au menu précédent.",
+            9: "Continuer ? ",
+            10: "Nombre de tours : ",
+            11: "Donnez une description du tournoi ou laisser vide : ",
+            12: "Veuillez renseigner la ville ou se déroule le tournoi : ",
+            13: "Veuillez renseigner le titre du tournoi : "
         }
         prompt_message = prompts.get(index, "Invalid prompt index")
         user_input = input(prompt_message).strip()
 
-        if index == 0:
+        if index == 1:
             return user_input.upper()
-        elif index in (1, 2):
+        elif index in (2, 3, 13, 12):
             return user_input.title()
         else:
             return user_input
     
-    def confirm_action(self):
-        print("\nÊtes-vous sûr de vouloir faire cela ?")
-    
     def report_player_list(self, players_data):
+        myTable = PrettyTable(["ID", "Prénom", "Nom", "Ddn"]) 
         for data in players_data:
-            print(f"ID [{data[0]}]  Prénom : {data[1]}  Nom : {data[2]}  Ddn : {data[3]}")
+            player_id = data.get("player_id", "N/A")
+            first_name = data.get("first_name", "N/A")
+            last_name = data.get("last_name", "N/A")
+            birth_date = data.get("birth_date", "N/A")
+            myTable.add_row([player_id, first_name, last_name, birth_date])
+        
+        print(myTable)
     
     def report_tournament_list(self, tournament_data):
         for data in tournament_data:

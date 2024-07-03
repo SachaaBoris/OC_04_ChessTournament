@@ -1,4 +1,5 @@
-_activate.au3
+_VenvActivate.au3
+_VenvCreate+Activate+Requirements.au3
 _Launcher.bat
 _cmd.bat
 _WorkDir/*
