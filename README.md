@@ -22,7 +22,7 @@ Activate your virtual environment by typing : `venv\Scripts\activate`
 Apply the projects requirements by typing : `py -m pip install -r requirements.txt`  
 
 2. Run the script.  
-In your console, still in the script's folder, execute the script with this command : `main.py`  
+In your console, still in the script's folder, execute the script with this command : `py chess`  
   
 ---  
   

@@ -1,4 +1,4 @@
-from views.views import MainView
+from views.main import MainView
 import time
 
 class ChessLogo:

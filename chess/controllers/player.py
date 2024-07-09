@@ -1,7 +1,8 @@
-from views.views import MainView
+from views.main import MainView
 #from controllers.main_controller import MainController
-from models.players_models import PlayerModel
-from controllers.report_controller import ReportController
+from models.player import PlayerModel
+from models.player import PlayerDataManager
+from controllers.report import ReportController
 from datetime import datetime, timedelta
 import random
 import string
@@ -31,7 +32,7 @@ class PlayerController:
                 elif choice == "2":  # self.edit_player()
                     self.edit_player()
                 elif choice == "3":  # ReportController.list_players()
-                    ReportController.list_all_players()
+                    self.list_all_players()
                 elif choice == "4":  # main menu
                     break
             else:
@@ -39,6 +40,34 @@ class PlayerController:
                 invalid_input = 1
                 MainView().invalid_input(0, ["", ""])
     
+    def data_file_exists(self, file_name):
+        if os.path.exists("data"):
+            file_path = f'data/{file_name}.json'
+        else:
+            file_path = f'chess/data/{file_name}.json'
+        if os.path.isfile(file_path):
+            return True
+        else:
+            return False
+    
+    def data_file_empty(self, file_name):
+        if os.path.exists("data"):
+            file_path = f'data/{file_name}.json'
+        else:
+            file_path = f'chess/data/{file_name}.json'
+        with open(file_path, 'r', encoding='utf-8') as file:
+            try:
+                data = json.load(file)
+            except json.JSONDecodeError:
+                print("Error decoding JSON.")
+                return True
+            
+            if "players" not in data:
+                print("Missing 'players' attribute.")
+                return True
+            else:
+                return False
+            
     def player_data(self):
         self.player_id = player_id
         self.first_name = first_name
@@ -48,24 +77,31 @@ class PlayerController:
     def create_player(self):
         MainView.clear_screen()
         MainView().menu_header(5)
-        player_id, first_name, last_name, birth_date = PlayerController.get_player_details("create")
+        player_id, first_name, last_name, birth_date = self.get_player_details("create")
         player = PlayerModel(player_id, first_name, last_name, birth_date)
-        PlayerModel.save_new_player(player)
+        PlayerDataManager().save_new_player(player)
         MainView().notify_alert(2, ["", ""])
-        MainView().user_prompts(4, ["", ""])
+        MainView().user_prompts(0, ["", ""])
     
     def edit_player(self):
-        MainView.clear_screen()
-        MainView().menu_header(6)
-        player_id, first_name, last_name, birth_date = PlayerController.get_player_details("edit")
-        player = PlayerModel(player_id, first_name, last_name, birth_date)
-        PlayerModel.update_player(player)
-        MainView().notify_alert(4, ["", ""])
-        MainView().user_prompts(0, ["", ""])
-        
+        file_name = "players"
+        if self.data_file_exists(file_name):
+            if not self.data_file_empty(file_name):
+                MainView.clear_screen()
+                MainView().menu_header(6)
+                player_id, first_name, last_name, birth_date = self.get_player_details("edit")
+                player = PlayerModel(player_id, first_name, last_name, birth_date)
+                PlayerDataManager().update_player(player)
+                MainView().notify_alert(4, ["", ""])
+                MainView().user_prompts(0, ["", ""])
+            else:
+                MainView().notify_alert(11, ["", ""])
+                MainView().user_prompts(0, ["", ""])
+        else:
+            MainView().notify_alert(11, ["", ""])
+            MainView().user_prompts(0, ["", ""])
     
-    @staticmethod
-    def vali_date(date_input):
+    def vali_date(self, date_input):
         ''' returns date input normalisée, is_valid bool, notify_index int '''
         formats = [
             r"(\d{4})(\d{2})(\d{2})",
@@ -94,17 +130,17 @@ class PlayerController:
                     return date_input, False, 3
         return date_input, False, 3
 
-    def get_player_details(mode):
+    def get_player_details(self, mode):
         while True:
             player_id = MainView().user_prompts(1, ["", ""])
             if re.match(r"[A-Z]{2}\d{5}", player_id) and len(player_id) == 7:
                 if mode == "create":
-                    if not PlayerModel.id_exists(player_id):
+                    if not PlayerDataManager().id_exists(player_id):
                         break
                     else:
                         MainView().notify_alert(0, ["", ""])
                 elif mode == "edit":
-                    if PlayerModel.id_exists(player_id):
+                    if PlayerDataManager().id_exists(player_id):
                         break
                     else:
                         MainView().notify_alert(3, ["", ""])
@@ -128,7 +164,7 @@ class PlayerController:
 
         while True:
             birth_date = MainView().user_prompts(4, ["", ""])
-            valid_date = PlayerController.vali_date(birth_date)
+            valid_date = self.vali_date(birth_date)
             if valid_date[1]:
                 birth_date = valid_date[0]
                 break
@@ -136,15 +172,15 @@ class PlayerController:
     
         return player_id, first_name, last_name, birth_date
     
-    def generate_random_id():
+    def generate_random_id(self):
         while True:
             letters = ''.join(random.choices(string.ascii_uppercase, k=2))
             digits = ''.join(random.choices(string.digits, k=5))
             player_id = letters + digits
-            if not PlayerModel.id_exists(player_id):
+            if not PlayerDataManager().id_exists(player_id):
                 return player_id
     
-    def generate_random_date():
+    def generate_random_date(self):
         ''' génère une date aléatoire entre -8 et -120 ans '''
         current_year = datetime.now().year
         start_year = current_year - 120
@@ -156,17 +192,20 @@ class PlayerController:
         random_date = start_date + timedelta(days=random_days)
         return random_date.strftime("%Y-%m-%d")
     
-    def generate_random_players(number_of_players):
+    def generate_random_players(self, number_of_players):
         tournament_players = []
-        file_path = 'data/randomizer.json'
-        if os.path.isfile(file_path):
+        if os.path.exists("data"):
+            file_path = f'data/randomizer.json'
+        else:
+            file_path = f'chess/data/randomizer.json'
+        if self.data_file_exists("randomizer"):
             with open(file_path, 'r', encoding='utf-8') as file:
                 random_data = json.load(file)
                 fr_names = random_data.get('noms_fr', None)
                 en_names = random_data.get('noms_en', None)
             
             for n in range(number_of_players):
-                player_id = PlayerController.generate_random_id()
+                player_id = self.generate_random_id()
                 a = random.choice(["fr","en"])
                 if a == "fr":
                     prenom = random.choice(fr_names[0])
@@ -176,7 +215,7 @@ class PlayerController:
                     nom = random.choice(en_names[1])
                 first_name = prenom
                 last_name = nom
-                birth_date = PlayerController.generate_random_date()
+                birth_date = self.generate_random_date()
                 new_player = [player_id, first_name, last_name, birth_date]
                 tournament_players.append(new_player)
             
@@ -186,3 +225,12 @@ class PlayerController:
             MainView().notify_alert(8, [file_path,""])
             MainView().user_prompts(0, ["", ""])
             return []
+    
+    def list_all_players(self):
+        if self.data_file_exists("players"):
+            ReportController().list_all_players()
+        else:
+            MainView.clear_screen()
+            MainView().menu_header(9)
+            MainView().notify_alert(11, ['data/players.json',""])
+            MainView().user_prompts(0, ["", ""])

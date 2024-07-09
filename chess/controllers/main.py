@@ -1,7 +1,7 @@
-from views.views import MainView
-from controllers.player_controller import PlayerController
-from controllers.tournament_controller import TournamentController
-from controllers.report_controller import ReportController
+from views.main import MainView
+from controllers.player import PlayerController
+from controllers.tournament import TournamentController
+from controllers.report import ReportController
 
 class MainController:
     '''Contrôleur principal'''

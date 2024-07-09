@@ -18,11 +18,12 @@ class MainView:
             5: "Ajout de joueur\n",
             6: "Modification de joueur\n",
             7: "Préparer un tournoi\n",
-            8: "Liste des joueurs\n",
-            9: "Liste des tournois\n",
-            10: "Nom, ville & date d'un tournoi\n",
-            11: "Liste des joueurs d'un tournoi\n",
-            12: "Liste de tous les matchs d'un tournoi\n"            
+            8: "Tournoi en cours\n",
+            9: "Liste des joueurs\n",
+            10: "Liste des tournois\n",
+            11: "Nom, ville & date d'un tournoi\n",
+            12: "Liste des joueurs d'un tournoi\n",
+            13: "Liste de tous les matchs d'un tournoi\n"            
         }
         message = texts.get(index, "Invalid header index")
         print(f"Chess Tournament Manager v0.1\n" + f"{message}")
@@ -111,7 +112,14 @@ class MainView:
             11: "Action impossible, aucun joueur enregistré.",
             12: "Action impossible, aucun tournoi n'a encore eu lieu.",
             13: "Action impossible, aucun round de ce tournoi n'est terminé.",
-            14: "Action impossible, aucun match de ce tournoi n'a encore eu lieu."  
+            14: "Action impossible, aucun match de ce tournoi n'a encore eu lieu.",
+            15: "Fin de la liste des joueurs.",
+            16: "Liste des joueurs exportée dans le dossier 'data/reports/'",
+            17: f"{values[0]}\n{values[1]}",
+            18: f"Round {values[0]} / {values[1]}",
+            19: f"Match {values[0]} / {values[1]}",
+            20: f"{values[0]} (pions noirs) vs {values[1]} (pions blancs)"
+            
         }
         message = texts.get(index, "Invalid alert index")
         print(message)
@@ -131,7 +139,13 @@ class MainView:
             10: "Nombre de tours : ",
             11: "Donnez une description du tournoi ou laisser vide : ",
             12: "Veuillez renseigner la ville ou se déroule le tournoi : ",
-            13: "Veuillez renseigner le titre du tournoi : "
+            13: "Veuillez renseigner le titre du tournoi : ",
+            14: f"Page {values[0]}/{values[1]}                   page suivante >> ",
+            15: f"Commencer le match {values[0]} (pions noirs) vs {values[1]} (pions blancs) ? ",
+            16: f"Score de {values[0]} (0, 0.5, 1): ",
+            17: "Prêts pour le prochain round ? ",
+            18: "Voir les résultats du tournoi ?",
+            19: "Fermer le tournoi et revenir au menu précédent ? "
         }
         prompt_message = prompts.get(index, "Invalid prompt index")
         user_input = input(prompt_message).strip()
@@ -143,9 +157,9 @@ class MainView:
         else:
             return user_input
     
-    def report_player_list(self, players_data):
+    def report_player_list(self, page_data):
         myTable = PrettyTable(["ID", "Prénom", "Nom", "Ddn"]) 
-        for data in players_data:
+        for data in page_data:
             player_id = data.get("player_id", "N/A")
             first_name = data.get("first_name", "N/A")
             last_name = data.get("last_name", "N/A")
@@ -154,9 +168,28 @@ class MainView:
         
         print(myTable)
     
-    def report_tournament_list(self, tournament_data):
-        for data in tournament_data:
-            print(f"Tournoi : {data[0]}  Ville : {data[1]}  Commencé le : {data[2]}  Terminé le : {data[3]}")
+    def report_tournament_list(self, page_data):
+        myTable = PrettyTable(["Titre", "Lieu", "Début", "Fin"]) 
+        for data in page_data:
+            tour_title = data['name']
+            tour_city = data['city']
+            tour_beg = data['start_date']
+            tour_end = data['end_date']
+            myTable.add_row([tour_title, tour_city, tour_beg, tour_end])
+        print(myTable)
+    
+    def tournament_final_rank(self, tour_name, tour_city, tour_beg, tour_end, page_data):
+        print(f"Résultats du {tour_name} in {tour_city}")
+        print(f"Débuté le {tour_beg} et achevé le {tour_end}\n")
+        myTable = PrettyTable(["ID", "Prénom", "Nom", "Score"]) 
+        for data in page_data:
+            player_id = data[0]
+            first_name = data[1]
+            last_name = data[2]
+            birth_date = data[3]
+            myTable.add_row([player_id, first_name, last_name, birth_date])
+        
+        print(myTable)
     
     def quit_message(self):
         MainView.clear_screen()
