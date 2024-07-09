@@ -8,10 +8,12 @@ venv/*
 Include/*
 Lib/*
 Scripts/*
+__pycache__/*
 chess/_cmd.bat
 chess/_Launcher.bat
 chess/_VenvActivate.au3
 chess/_VenvCreate+Activate+Requirements.au3
+chess/__pycache__/*
 chess/data/playersbkp.json
 chess/data/playersbkp.json
 chess/data/reports/*
