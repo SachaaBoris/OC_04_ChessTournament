@@ -1,6 +1,7 @@
 from views.main import MainView
 import time
 
+
 class ChessLogo:
     def display_logo(self):
         MainView.clear_screen()

@@ -1,5 +1,4 @@
 from views.main import MainView
-#from controllers.main_controller import MainController
 from models.player import PlayerModel
 from models.player import PlayerDataManager
 from controllers.report import ReportController
@@ -10,37 +9,40 @@ import json
 import os
 import re
 
+
 class PlayerController:
-    '''Contrôleur de gestion des joueurs'''
+    """Contrôleur de gestion des joueurs"""
 
     def __init__(self):
         pass
 
     def player_menu(self):
+        """ menu de gestion des joueurs """
         invalid_input = 0
         while True:
             if invalid_input == 0:
-                MainView.clear_screen()
+                MainView().clear_screen()
                 MainView().player_menu()
             
-            choice = MainView().pick_option()
+            choice = MainView().user_prompts(21, ["", ""])
             
             if choice in ["1", "2", "3", "4"]:
                 invalid_input = 0
-                if choice == "1":  # self.create_player()
-                    self.create_player()
-                elif choice == "2":  # self.edit_player()
-                    self.edit_player()
-                elif choice == "3":  # ReportController.list_players()
-                    self.list_all_players()
-                elif choice == "4":  # main menu
-                    break
+                if choice == "1":
+                    self.create_player()  # self.create_player()
+                elif choice == "2":
+                    self.edit_player()  # self.edit_player()
+                elif choice == "3":
+                    self.list_all_players()  # self.list_all_players()
+                elif choice == "4":  
+                    break  # main menu
             else:
                 # Invalid input
                 invalid_input = 1
                 MainView().invalid_input(0, ["", ""])
     
     def data_file_exists(self, file_name):
+        """ returns bool """
         if os.path.exists("data"):
             file_path = f'data/{file_name}.json'
         else:
@@ -51,6 +53,7 @@ class PlayerController:
             return False
     
     def data_file_empty(self, file_name):
+        """ returns bool """
         if os.path.exists("data"):
             file_path = f'data/{file_name}.json'
         else:
@@ -75,7 +78,8 @@ class PlayerController:
         self.birth_date = birth_date
     
     def create_player(self):
-        MainView.clear_screen()
+        """ menu de creation de joueur """
+        MainView().clear_screen()
         MainView().menu_header(5)
         player_id, first_name, last_name, birth_date = self.get_player_details("create")
         player = PlayerModel(player_id, first_name, last_name, birth_date)
@@ -84,10 +88,11 @@ class PlayerController:
         MainView().user_prompts(0, ["", ""])
     
     def edit_player(self):
+        """ menu d'edition de joueur """
         file_name = "players"
         if self.data_file_exists(file_name):
             if not self.data_file_empty(file_name):
-                MainView.clear_screen()
+                MainView().clear_screen()
                 MainView().menu_header(6)
                 player_id, first_name, last_name, birth_date = self.get_player_details("edit")
                 player = PlayerModel(player_id, first_name, last_name, birth_date)
@@ -102,7 +107,7 @@ class PlayerController:
             MainView().user_prompts(0, ["", ""])
     
     def vali_date(self, date_input):
-        ''' returns date input normalisée, is_valid bool, notify_index int '''
+        """ returns date input normalisée, is_valid bool, notify_index int """
         formats = [
             r"(\d{4})(\d{2})(\d{2})",
             r"(\d{4}) (\d{2}) (\d{2})",
@@ -131,8 +136,9 @@ class PlayerController:
         return date_input, False, 3
 
     def get_player_details(self, mode):
+        """ returns player_id, first_name, last_name, birth_date """
         while True:
-            player_id = MainView().user_prompts(1, ["", ""])
+            player_id = MainView().user_prompts(1, ["", ""]).upper()
             if re.match(r"[A-Z]{2}\d{5}", player_id) and len(player_id) == 7:
                 if mode == "create":
                     if not PlayerDataManager().id_exists(player_id):
@@ -173,6 +179,7 @@ class PlayerController:
         return player_id, first_name, last_name, birth_date
     
     def generate_random_id(self):
+        """ génère un ID au format XX##### """
         while True:
             letters = ''.join(random.choices(string.ascii_uppercase, k=2))
             digits = ''.join(random.choices(string.digits, k=5))
@@ -181,7 +188,7 @@ class PlayerController:
                 return player_id
     
     def generate_random_date(self):
-        ''' génère une date aléatoire entre -8 et -120 ans '''
+        """ génère une date aléatoire entre -8 et -120 ans """
         current_year = datetime.now().year
         start_year = current_year - 120
         end_year = current_year - 8
@@ -193,6 +200,7 @@ class PlayerController:
         return random_date.strftime("%Y-%m-%d")
     
     def generate_random_players(self, number_of_players):
+        """ returns list of players """
         tournament_players = []
         if os.path.exists("data"):
             file_path = f'data/randomizer.json'
@@ -206,7 +214,7 @@ class PlayerController:
             
             for n in range(number_of_players):
                 player_id = self.generate_random_id()
-                a = random.choice(["fr","en"])
+                a = random.choice(["fr", "en"])
                 if a == "fr":
                     prenom = random.choice(fr_names[0])
                     nom = random.choice(fr_names[1])
@@ -222,15 +230,16 @@ class PlayerController:
             return tournament_players
             
         else:
-            MainView().notify_alert(8, [file_path,""])
+            MainView().notify_alert(8, [file_path, ""])
             MainView().user_prompts(0, ["", ""])
             return []
     
     def list_all_players(self):
+        """ lists all players """
         if self.data_file_exists("players"):
             ReportController().list_all_players()
         else:
-            MainView.clear_screen()
+            MainView().clear_screen()
             MainView().menu_header(9)
-            MainView().notify_alert(11, ['data/players.json',""])
+            MainView().notify_alert(11, ['data/players.json', ""])
             MainView().user_prompts(0, ["", ""])

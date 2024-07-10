@@ -12,37 +12,40 @@ import json
 import os
 import re
 
+
 class TournamentController:
-    '''Contrôleur de gestion des tournois'''
+    """Contrôleur de gestion des tournois"""
 
     def __init__(self):
         pass
         
     def tournament_menu(self):
+        """ menu de gestion des tournois """
         invalid_input = 0
         while True:
             if invalid_input == 0:
-                MainView.clear_screen()
+                MainView().clear_screen()
                 MainView().tournament_menu()
             
-            choice = MainView().pick_option()
+            choice = MainView().user_prompts(21, ["", ""])
 
             if choice in ["1", "2", "3", "4"]:
                 invalid_input = 0
-                if choice == "1":  # self.create_tournament()
-                    self.create_tournament()
-                elif choice == "2":  # self.launch_tournament()
-                    self.can_resume_tournament()
-                elif choice == "3": # ReportController.list_tournaments()
-                    ReportController().list_tournaments()
-                elif choice == "4":  # main menu
-                    break
+                if choice == "1":
+                    self.create_tournament()  # self.create_tournament()
+                elif choice == "2":
+                    self.can_resume_tournament()  # self.launch_tournament()
+                elif choice == "3":
+                    ReportController().list_tournaments()  # ReportController().list_tournaments()
+                elif choice == "4":
+                    break  # main menu
             else:
                 # Invalid input
                 invalid_input = 1
                 MainView().invalid_input(0, ["", ""])
     
     def data_file_exists(self, file_name):
+        """ returns bool """
         if os.path.exists("data"):
             file_path = f'data/{file_name}.json'
         else:
@@ -53,6 +56,7 @@ class TournamentController:
             return False
         
     def generate_random_tour_title_city(self):
+        """ returns [str(tour_name), str(tour_city)] """
         if self.data_file_exists("randomizer"):
             if os.path.exists("data"):
                 file_path = 'data/randomizer.json'
@@ -67,26 +71,27 @@ class TournamentController:
             tour_title0 = tour_city.split(",")[0].strip()
             tour_title1 = random.choice(tour_titles[0])
             tour_title2 = random.choice(tour_titles[1])
-            yearnow = datetime.today().strftime("%Y")
+            year_now = datetime.today().strftime("%Y")
             a = random.choice([1, 2, 3, 4, 5, 6])
             if a == 1:
                 tour_name = f"{tour_title1} Chess {tour_title2}"
             elif a == 2:
-                tour_name = f"{tour_title1} Chess {tour_title2} {yearnow[2:]}"
+                tour_name = f"{tour_title1} Chess {tour_title2} {year_now[2:]}"
             elif a == 3:
-                tour_name = f"{tour_title1} {tour_title2} {yearnow[2:]}"
+                tour_name = f"{tour_title1} {tour_title2} {year_now[2:]}"
             elif a == 4:
-                tour_name = f"{tour_title0} Chess {tour_title2} {yearnow[2:]}"
+                tour_name = f"{tour_title0} Chess {tour_title2} {year_now[2:]}"
             elif a == 5:
                 tour_name = f"The {tour_title0} {tour_title1} {tour_title2}"
             else:
                 tour_name = f"{tour_title1} {tour_title2}"
             
             return [tour_name, tour_city]
-        return ["",""]
+        return ["", ""]
     
     def create_tournament(self):
-        MainView.clear_screen()
+        """ menu de creation de tournoi """
+        MainView().clear_screen()
         MainView().menu_header(7)
         save = True
         if self.data_file_exists("pending_tournament"):
@@ -105,21 +110,13 @@ class TournamentController:
             MainView().user_prompts(0, ["", ""])
     
     def get_tournament_details(self):
-        ''' returns [tour_title, tour_city, ...] '''
+        """ returns [tournament_details_list] """
         number_of_players = self.get_tournement_how_many_players()
         tour_players = self.get_tournament_automatic(number_of_players)
         
-        if len(tour_players) > 0:
-            PlayerDataManager().save_player_list(tour_players)
-            tour_rounds = self.get_tournament_rounds()
-            tour_desc = " "
-            title_city = self.generate_random_tour_title_city()
-            tour_title = title_city[0]
-            tour_city = title_city[1]
-            
-        else:
+        if len(tour_players) == 0:
             for n in range(number_of_players):
-                MainView().notify_alert(7, [n, number_of_players])
+                MainView().notify_alert(7, [n + 1, number_of_players])
                 new_player = [PlayerController().get_player_details("tournament")]
                 tour_players.append(new_player)
         
@@ -127,29 +124,41 @@ class TournamentController:
             tour_desc = MainView().user_prompts(11, ["", ""])
             tour_city = MainView().user_prompts(12, ["", ""])
             tour_title = MainView().user_prompts(13, ["", ""])
+        else:
+            tour_rounds = self.get_tournament_rounds()
+            tour_desc = ""
+            title_city = self.generate_random_tour_title_city()
+            tour_title = title_city[0]
+            tour_city = title_city[1]  
         
-        tour_round = 0
-        tour_rounds_results = []
-        tour_final_results = []
-        tour_beg_date = ""
-        tour_end_date = ""
+        tournament_details = []
+        if len(tour_players) > 0:
+            PlayerDataManager().save_player_list(tour_players)
         
-        tournament_details = [
-            tour_title, 
-            tour_city, 
-            tour_desc, 
-            tour_players, 
-            tour_rounds, 
-            tour_round, 
-            tour_rounds_results, 
-            tour_final_results, 
-            tour_beg_date, 
-            tour_end_date
-        ]
-        
+            # initialisation de valeures vides
+            tour_round = 0
+            tour_rounds_results = []
+            tour_final_results = []
+            tour_beg_date = ""
+            tour_end_date = ""
+            
+            tournament_details = [
+                tour_title, 
+                tour_city, 
+                tour_desc, 
+                tour_players, 
+                tour_rounds, 
+                tour_round, 
+                tour_rounds_results, 
+                tour_final_results, 
+                tour_beg_date, 
+                tour_end_date
+            ]
+            
         return tournament_details
     
     def get_tournement_how_many_players(self):
+        """ returns int number_of_players """
         while True:   
             try:
                 number_of_players = int(MainView().user_prompts(6, ["", ""]))
@@ -163,9 +172,10 @@ class TournamentController:
         return number_of_players
     
     def get_tournament_automatic(self, number_of_players):
+        """ returns list of tournament players """
         tour_players = []
         while True:
-            automatic = MainView().user_prompts(7, ["", ""])  # Random prompt
+            automatic = MainView().user_prompts(7, ["", ""])
             if automatic in ["y", "yes", "o", "oui"]:
                 MainView().notify_alert(6, ["", ""])
                 sure = MainView().user_prompts(5, ["", ""])
@@ -180,10 +190,14 @@ class TournamentController:
         return tour_players
     
     def get_tournament_rounds(self):
+        """ returns int(tour_rounds) """
         while True:
+            tour_rounds = MainView().user_prompts(10, ["", ""])
+            if tour_rounds in ["0", ""]:
+                tour_rounds = "4"
             try:
-                tour_rounds = int(MainView().user_prompts(10, ["", ""]))
-                if 1 <= tour_rounds <= 20:
+                tour_rounds = int(tour_rounds)
+                if 1 <= tour_rounds <= 99:
                     break
                 else:
                     MainView().invalid_input(11, ["", ""])
@@ -193,7 +207,8 @@ class TournamentController:
         return tour_rounds
     
     def can_resume_tournament(self):
-        MainView.clear_screen()
+        """ verifie le statue de pending_tournament """
+        MainView().clear_screen()
         MainView().menu_header(8)
         if self.data_file_exists("pending_tournament"):
             self.tournament_status()
@@ -202,12 +217,14 @@ class TournamentController:
             MainView().user_prompts(0, ["", ""])
     
     def tournament_status(self):
+        """ détermine quel methode appliquer pour reprendre le tournoi """
         if TournamentDataManager().has_tournament_started():
             self.resume_tournament([])
         else:
             self.start_tournament()
     
     def db_get_tournament_data(self):
+        """ returns list of tournament_details """
         tournament_data = TournamentDataManager().get_tournament_data()
         tour_title = tournament_data[0].get('tournament_name')
         tour_city = tournament_data[0].get('city')
@@ -234,6 +251,7 @@ class TournamentController:
         return tournament_details
     
     def start_tournament(self):
+        """ démarre le tournoi """
         tournament_data = self.db_get_tournament_data()
         tour_round = 1
         tour_rounds_results = self.prepare_first_round(tournament_data[3])
@@ -255,15 +273,16 @@ class TournamentController:
         self.resume_tournament(tournament_details)
     
     def prepare_first_round(self, players):
-        ''' returns first round '''
+        """ returns list [first_round] """
         randomised_players = random.shuffle(players)
         round = []
         for i in range(0, len(players), 2):
-            round.append([["", ""],[players[i], players[i+1]], [-1, -1]])
+            round.append([["", ""], [players[i], players[i+1]], [-1, -1]])
 
-        return [["Round 1",round]]
+        return [["Round 1", round]]
     
     def get_match_data(self, tour_rounds_results, mode):
+        """ returns list of player_pairs or list of player_scores """
         player_scores = {}
         player_pairs = []
         for round_result in tour_rounds_results:
@@ -293,7 +312,7 @@ class TournamentController:
                         'score': 0
                     }
                 
-                player_pair = [player1_id,player2_id]
+                player_pair = [player1_id, player2_id]
                 player_pairs.append(player_pair) 
                 player_scores[player1_id]['score'] += score_j1
                 player_scores[player2_id]['score'] += score_j2
@@ -303,7 +322,7 @@ class TournamentController:
             return player_pairs
     
     def players_ranks(self, tour_rounds_results):
-        ''' returns a list of players by score '''
+        """ returns a list of players by score """
         player_scores = self.get_match_data(tour_rounds_results, "rank")
 
         results = []
@@ -316,7 +335,8 @@ class TournamentController:
         return results
     
     def prepare_next_round(self, tournament_data):
-        MainView.clear_screen()
+        """ prepares next round """
+        MainView().clear_screen()
         MainView().menu_header(8)
         players = tournament_data[3]
         players_ranks = self.players_ranks(tournament_data[6])
@@ -330,11 +350,12 @@ class TournamentController:
             player2 = players[i+1]
             
             # Vérification si les joueurs ont déjà joué ensemble
-            while ([player1, player2] in tour_pairs or [player2, player1] in tour_pairs):
+            while [player1, player2] in tour_pairs or [player2, player1] in tour_pairs:
                 player1, player2 = random.sample(players, 2)  # Sélection aléatoire de deux joueurs
             
             # Ajout des paires avec scores initiaux
-            round_content.append([["", ""], [[player1[0], player1[1], player1[2], player1[3]], [player2[0], player2[1], player2[2], player2[3]]], [-1, -1]])
+            round_content.append([["", ""], [[player1[0], player1[1], player1[2], player1[3]],
+                                [player2[0], player2[1], player2[2], player2[3]]], [-1, -1]])
 
             # Ajout des paires à la liste des paires de tournois pour empêcher la répétition des matchs
             tour_pairs.append([player1, player2])
@@ -358,6 +379,7 @@ class TournamentController:
         self.resume_tournament(tournament_details)
     
     def tournament_results(self, tournament_data):
+        """ prepare l'affichage des scores finaux """
         players_ranks = self.players_ranks(tournament_data[6])
         tour_end_date = datetime.now().strftime('%Y-%m-%d_%H:%M')
         tournament_details = [
@@ -374,12 +396,14 @@ class TournamentController:
         ]
         TournamentDataManager().update_tournament(tournament_details)
         TournamentDataManager().close_tournament(tournament_data[1], tournament_data[8])
-        MainView.clear_screen()
+        MainView().clear_screen()
         MainView().menu_header(8)
-        MainView().tournament_final_rank(tournament_data[0], tournament_data[1], tournament_data[8], tour_end_date, players_ranks)
+        MainView().tournament_final_rank(tournament_data[0], tournament_data[1],
+                                         tournament_data[8], tour_end_date, players_ranks)
         MainView().user_prompts(19, ["", ""])
     
     def resume_tournament(self, tournament_details):
+        """ reprends le tournoi en cours """
         if len(tournament_details) == 0:
             tournament_details = self.db_get_tournament_data()
         
@@ -406,15 +430,15 @@ class TournamentController:
                 if match_dates[0] == "" or match_dates[1] == "":
                     player1 = players[0]
                     player2 = players[1]
-                    p1name =f"{player1[1]} {player1[2]}"
-                    p2name =f"{player2[1]} {player2[2]}"
+                    p1name = f"{player1[1]} {player1[2]}"
+                    p2name = f"{player2[1]} {player2[2]}"
                     
                     MainView().notify_alert(17, [tour_title, tour_city])
                     MainView().notify_alert(18, [tour_round, tour_rounds])
                     MainView().notify_alert(19, [round_match, number_of_matches])
                     MainView().user_prompts(15, [p1name, p2name])
                     start_time = datetime.now().strftime("%Y-%m-%d_%H:%M")
-                    MainView.clear_screen()
+                    MainView().clear_screen()
                     MainView().menu_header(8)
                     MainView().notify_alert(17, [tour_title, tour_city])
                     MainView().notify_alert(18, [tour_round, tour_rounds])
@@ -447,16 +471,16 @@ class TournamentController:
                         tour_end_date,
                     ]
                     TournamentDataManager().update_tournament(tournament_details)
-                    MainView.clear_screen()
+                    MainView().clear_screen()
                     MainView().menu_header(8)
         
         if tour_round < tour_rounds:
-            MainView.clear_screen()
+            MainView().clear_screen()
             MainView().menu_header(8)
             MainView().user_prompts(17, ["", ""])
             self.prepare_next_round(tournament_details)
         else:
-            MainView.clear_screen()
+            MainView().clear_screen()
             MainView().menu_header(8)
             MainView().user_prompts(18, ["", ""])
             self.tournament_results(tournament_details)
