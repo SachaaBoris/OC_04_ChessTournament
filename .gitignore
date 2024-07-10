@@ -10,6 +10,8 @@ Lib/*
 Scripts/*
 __pycache__/*
 **/__pycache__/
+__pycache__
+*/__pycache__/*
 chess/_cmd.bat
 chess/_Launcher.bat
 chess/_VenvActivate.au3
