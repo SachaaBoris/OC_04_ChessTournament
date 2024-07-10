@@ -36,7 +36,7 @@ class TournamentController:
                 elif choice == "2":
                     self.can_resume_tournament()  # self.launch_tournament()
                 elif choice == "3":
-                    ReportController().list_tournaments()  # ReportController().list_tournaments()
+                    ReportController().list_all_tournaments()  # ReportController().list_tournaments()
                 elif choice == "4":
                     break  # main menu
             else:

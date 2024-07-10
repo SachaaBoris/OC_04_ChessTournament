@@ -103,6 +103,8 @@ class PlayerController:
                 MainView().notify_alert(11, ["", ""])
                 MainView().user_prompts(0, ["", ""])
         else:
+            MainView().clear_screen()
+            MainView().menu_header(6)
             MainView().notify_alert(11, ["", ""])
             MainView().user_prompts(0, ["", ""])
     
