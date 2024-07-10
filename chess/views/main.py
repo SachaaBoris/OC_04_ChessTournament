@@ -199,8 +199,8 @@ class MainView:
         for data in page_data:
             tour_title = data['name']
             tour_city = data['city']
-            tour_beg = data['beg_date']
-            tour_end = "En cours..." if data['end_date'] == "" else data['end_date']
+            tour_beg = "Non débuté..." if data['beg_date'] == "" else data['beg_date']
+            tour_end = "Non terminé..." if data['end_date'] == "" else data['end_date']
             my_table.add_row([tour_title, tour_city, tour_beg, tour_end])
         print(my_table)
 

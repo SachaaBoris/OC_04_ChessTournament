@@ -341,27 +341,32 @@ class TournamentController:
         players = tournament_data[3]
         players_ranks = self.players_ranks(tournament_data[6])
         tour_rounds_results = tournament_data[6]
-        tour_pairs = self.get_match_data(tour_rounds_results, "pairs")
-        tour_round = len(tournament_data[6])+1
+        tour_round = len(tournament_data[6]) + 1
         round_content = []
 
-        for i in range(0, len(players), 2):
-            player1 = players[i]
-            player2 = players[i+1]
-            
-            # Vérification si les joueurs ont déjà joué ensemble
-            while [player1, player2] in tour_pairs or [player2, player1] in tour_pairs:
-                player1, player2 = random.sample(players, 2)  # Sélection aléatoire de deux joueurs
-            
-            # Ajout des paires avec scores initiaux
+        previous_pairs = self.get_match_data(tour_rounds_results, "pairs")
+        available_players = players_ranks.copy()
+        
+        while available_players:
+            # deux premiers joueurs disponibles
+            player1 = available_players.pop(0)
+
+            # trouver un adversaire qui n'a pas déjà joué contre player1
+            for idx, potential_opponent in enumerate(available_players):
+                if [player1, potential_opponent] not in previous_pairs and [potential_opponent, player1] not in previous_pairs:
+                    player2 = available_players.pop(idx)
+                    break
+            else:
+                # si tous les joueurs restants ont déjà joué contre player1, choisir un adversaire aléatoire
+                player2 = available_players.pop(0)
+
             round_content.append([["", ""], [[player1[0], player1[1], player1[2], player1[3]],
                                 [player2[0], player2[1], player2[2], player2[3]]], [-1, -1]])
 
-            # Ajout des paires à la liste des paires de tournois pour empêcher la répétition des matchs
-            tour_pairs.append([player1, player2])
-
-        tour_rounds_results.append([f"Round {tour_round}", round_content])
+            previous_pairs.append([player1[0], player2[0]])
         
+        tour_rounds_results.append([f"Round {tour_round}", round_content])
+
         tournament_details = [
             tournament_data[0], 
             tournament_data[1], 
@@ -374,7 +379,7 @@ class TournamentController:
             tournament_data[8],
             tournament_data[9]
         ]
-        
+
         TournamentDataManager().update_tournament(tournament_details)
         self.resume_tournament(tournament_details)
     
