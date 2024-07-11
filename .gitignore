@@ -17,6 +17,7 @@ chess/_Launcher.bat
 chess/_VenvActivate.au3
 chess/_VenvCreate+Activate+Requirements.au3
 chess/__pycache__/*
+chess/requirements.txt
 chess/data/playersbkp.json
 chess/data/playersbkp.json
 chess/data/reports/*
