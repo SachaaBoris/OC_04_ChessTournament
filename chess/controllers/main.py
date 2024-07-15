@@ -8,17 +8,17 @@ class MainController:
     ''' Contrôleur principal '''
 
     def __init__(self):
-        pass
+        self.view = MainView()
 
     def main_menu(self):
         ''' menu principal du programme '''
         invalid_input = 0
         while True:
             if invalid_input == 0:
-                MainView().clear_screen()
-                MainView().main_menu()
+                self.view.clear_screen()
+                self.view.display_menu("main")
             
-            choice = MainView().user_prompts(21, ["", ""])
+            choice = self.view.user_prompts(21, ["", ""])
             
             if choice in ["1", "2", "3", "4"]:
                 invalid_input = 0
@@ -29,10 +29,10 @@ class MainController:
                 elif choice == "3":
                     ReportController().report_menu()  # ReportController().report_menu()
                 elif choice == "4":
-                    quit_app = MainView().quit_message()  # Quit
+                    quit_app = self.view.quit_message()  # Quit
                     break
             else:
                 # Invalid input
                 invalid_input = 1
-                MainView().invalid_input(0)
+                self.view.invalid_input(0, ["",""])
     

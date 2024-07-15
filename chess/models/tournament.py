@@ -7,22 +7,21 @@ from tinydb import TinyDB, Query
 class Tournament:
     """ Model pour les tournois """
     
-    def __init__(self, name, city, description, players, rounds, round,
-                 rounds_results, final_results, beg_date, end_date):
-        self.name = name
+    def __init__(self, tournament_name, city, description, players, rounds, round, rounds_results, final_results, beg_date, end_date):
+        self.tournament_name = tournament_name
         self.city = city
         self.description = description
         self.players = players
         self.rounds = rounds
-        self.round = 0
-        self.rounds_results = []
-        self.final_results = []
-        self.beg_date = ""
-        self.end_date = ""
+        self.round = round
+        self.rounds_results = rounds_results
+        self.final_results = final_results
+        self.beg_date = beg_date
+        self.end_date = end_date
     
     def to_dict(self):
         return {
-            "tournament_name": self.name,
+            "tournament_name": self.tournament_name,
             "city": self.city,
             "description": self.description,
             "players": self.players,
@@ -40,35 +39,67 @@ class TournamentDataManager:
     
     def __init__(self):
         if os.path.exists("data"):
-            db_path = 'data/pending_tournament.json'
+            db_path = 'data/tournaments.json'
         else:
-            db_path = 'chess/data/pending_tournament.json'
+            db_path = 'chess/data/tournaments.json'
         
         if not os.path.exists(db_path):
             os.makedirs(os.path.dirname(db_path), exist_ok=True)
         
         self.db_path = db_path
         self.db = TinyDB(db_path)
-        self.tournament_table = self.db.table('tournament')
+        self.tournament_table = self.db.table('tournaments')
     
-    def to_dict(self, tournament_data):
+    def initialize_tournament_dict(self, data):
+        print("Data received for initialization:", data)
+        tournament = Tournament(
+            tournament_name = data['tournament_name'],
+            city = data['city'],
+            description = data['description'],
+            players = data['players'],
+            rounds = data['rounds'],
+            round = data['round'],
+            rounds_results = data['rounds_results'],
+            final_results = data['final_results'],
+            beg_date = data['beg_date'],
+            end_date = data['end_date']
+        )
+        return tournament
+    
+    def initialize_tournament_list(self, data):
+        tournament = Tournament(
+            tournament_name = data[0],
+            city = data[1],
+            description = data[2],
+            players = data[3],
+            rounds = data[4],
+            round = data[5],
+            rounds_results = data[6],
+            final_results = data[7],
+            beg_date = data[8],
+            end_date = data[9]
+        )
+        return tournament
+    
+    def to_dict(self, tournament_data): ### TO DESTROY ?
         """ returns dictionnary """
         return {
-            "tournament_name": tournament_data[0],
-            "city": tournament_data[1],
-            "description": tournament_data[2],
-            "players": tournament_data[3],
-            "rounds": tournament_data[4],
-            "round": tournament_data[5],
-            "rounds_results": tournament_data[6],
-            "final_results": tournament_data[7],
-            "beg_date": tournament_data[8],
-            "end_date": tournament_data[9]
+            "tournament_name": tournament_data['tournament_name'],
+            "city": tournament_data['city'],
+            "description": tournament_data['description'],
+            "players": tournament_data['players'],
+            "rounds": tournament_data['rounds'],
+            "round": tournament_data['round'],
+            "rounds_results": tournament_data['rounds_results'],
+            "final_results": tournament_data['final_results'],
+            "beg_date": tournament_data['beg_date'],
+            "end_date": tournament_data['end_date']
         }
     
     def save_new_tournament(self, tournament_data):
         """ sauvegarder le nouveau tournoi """
-        tournament_dict = self.to_dict(tournament_data)
+        #### faire le table insert a partir de l'objet tournament.to dict
+        tournament_dict = Tournament.to_dict(tournament_data)
         self.tournament_table.insert(tournament_dict)
     
     def has_tournament_started(self):
@@ -80,28 +111,17 @@ class TournamentDataManager:
             return True
         return False
     
-    def update_tournament(self, tournament_data):
+    def update_tournament(self, tournament):
         """ mettre à jour les data du tournoi """
-        tournament_dict = self.to_dict(tournament_data)
+        if not isinstance(tournament, Tournament):
+            tournament = self.initialize_tournament(tournament)
+        
+        tournament_dict = tournament.to_dict()
         existing_tournament = Query()
         
         with TinyDB(self.db_path) as db:
-            tournament_table = db.table('tournament')
-            tournament_table.update(tournament_dict, existing_tournament.tournament_name == tournament_data[0])
-    
-    def close_tournament(self, city, end_date):
-        """ renomme et déplace le pending_tournement """
-        self.db.close()
-        city = city.replace(", ", "-")
-        filename = f"tournament_{end_date.split('_')[0]}_{city}.json"
-        if os.path.exists("data"):
-            old_path = 'data/pending_tournament.json'
-        else:
-            old_path = 'chess/data/pending_tournament.json'
-        old_path = 'data/pending_tournament.json'
-        new_path = os.path.join('data', 'tournaments', filename)
-        os.makedirs(os.path.dirname(new_path), exist_ok=True)
-        shutil.move(old_path, new_path)
+            tournament_table = db.table('tournaments')
+            tournament_table.update(tournament_dict, existing_tournament.tournament_name == tournament.tournament_name)
         
     def list_tournaments(self):
         """ returns dictionnary """
@@ -119,4 +139,4 @@ class TournamentDataManager:
     def get_tournament_data(self):
         """ returns dictionnary """
         return self.tournament_table.all()
-    
+        

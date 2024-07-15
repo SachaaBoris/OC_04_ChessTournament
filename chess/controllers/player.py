@@ -14,17 +14,17 @@ class PlayerController:
     """Contrôleur de gestion des joueurs"""
 
     def __init__(self):
-        pass
+        self.view = MainView()
 
     def player_menu(self):
         """ menu de gestion des joueurs """
         invalid_input = 0
         while True:
             if invalid_input == 0:
-                MainView().clear_screen()
-                MainView().player_menu()
+                self.view.clear_screen()
+                self.view.display_menu("player")
             
-            choice = MainView().user_prompts(21, ["", ""])
+            choice = self.view.user_prompts(21, ["", ""])
             
             if choice in ["1", "2", "3", "4"]:
                 invalid_input = 0
@@ -39,7 +39,7 @@ class PlayerController:
             else:
                 # Invalid input
                 invalid_input = 1
-                MainView().invalid_input(0, ["", ""])
+                self.view.invalid_input(0, ["", ""])
     
     def data_file_exists(self, file_name):
         """ returns bool """
@@ -79,34 +79,35 @@ class PlayerController:
     
     def create_player(self):
         """ menu de creation de joueur """
-        MainView().clear_screen()
-        MainView().menu_header(5)
+        self.view.clear_screen()
+        self.view.menu_header(5)
         player_id, first_name, last_name, birth_date = self.get_player_details("create")
         player = PlayerModel(player_id, first_name, last_name, birth_date)
         PlayerDataManager().save_new_player(player)
-        MainView().notify_alert(2, ["", ""])
-        MainView().user_prompts(0, ["", ""])
+        self.view.notify_alert(2, ["", ""])
+        self.view.user_prompts(0, ["", ""])
     
     def edit_player(self):
         """ menu d'edition de joueur """
         file_name = "players"
         if self.data_file_exists(file_name):
             if not self.data_file_empty(file_name):
-                MainView().clear_screen()
-                MainView().menu_header(6)
+                self.view.clear_screen()
+                self.view.menu_header(6)
+                ### proposer de modifier un joueur depuis une liste
                 player_id, first_name, last_name, birth_date = self.get_player_details("edit")
                 player = PlayerModel(player_id, first_name, last_name, birth_date)
                 PlayerDataManager().update_player(player)
-                MainView().notify_alert(4, ["", ""])
-                MainView().user_prompts(0, ["", ""])
+                self.view.notify_alert(4, ["", ""])
+                self.view.user_prompts(0, ["", ""])
             else:
-                MainView().notify_alert(11, ["", ""])
-                MainView().user_prompts(0, ["", ""])
+                self.view.notify_alert(11, ["", ""])
+                self.view.user_prompts(0, ["", ""])
         else:
-            MainView().clear_screen()
-            MainView().menu_header(6)
-            MainView().notify_alert(11, ["", ""])
-            MainView().user_prompts(0, ["", ""])
+            self.view.clear_screen()
+            self.view.menu_header(6)
+            self.view.notify_alert(11, ["", ""])
+            self.view.user_prompts(0, ["", ""])
     
     def vali_date(self, date_input):
         """ returns date input normalisée, is_valid bool, notify_index int """
@@ -140,43 +141,43 @@ class PlayerController:
     def get_player_details(self, mode):
         """ returns player_id, first_name, last_name, birth_date """
         while True:
-            player_id = MainView().user_prompts(1, ["", ""]).upper()
+            player_id = self.view.user_prompts(1, ["", ""]).upper()
             if re.match(r"[A-Z]{2}\d{5}", player_id) and len(player_id) == 7:
                 if mode == "create":
                     if not PlayerDataManager().id_exists(player_id):
                         break
                     else:
-                        MainView().notify_alert(0, ["", ""])
+                        self.view.notify_alert(0, ["", ""])
                 elif mode == "edit":
                     if PlayerDataManager().id_exists(player_id):
                         break
                     else:
-                        MainView().notify_alert(3, ["", ""])
+                        self.view.notify_alert(3, ["", ""])
                 elif mode == "tournament":
                     break
                 
             else:
-                MainView().invalid_input(6, ["", ""])
+                self.view.invalid_input(6, ["", ""])
             
         while True:
-            first_name = MainView().user_prompts(2, ["", ""])
+            first_name = self.view.user_prompts(2, ["", ""])
             if first_name and first_name.replace("-", "").isalpha():
                 break
-            MainView().invalid_input(1, ["", ""])
+            self.view.invalid_input(1, ["", ""])
         
         while True:
-            last_name = MainView().user_prompts(3, ["", ""])
+            last_name = self.view.user_prompts(3, ["", ""])
             if last_name and last_name.replace("-", "").isalpha():
                 break
-            MainView().invalid_input(2, ["", ""])
+            self.view.invalid_input(2, ["", ""])
 
         while True:
-            birth_date = MainView().user_prompts(4, ["", ""])
+            birth_date = self.view.user_prompts(4, ["", ""])
             valid_date = self.vali_date(birth_date)
             if valid_date[1]:
                 birth_date = valid_date[0]
                 break
-            MainView().invalid_input(valid_date[2], ["", ""])
+            self.view.invalid_input(valid_date[2], ["", ""])
     
         return player_id, first_name, last_name, birth_date
     
@@ -232,8 +233,8 @@ class PlayerController:
             return tournament_players
             
         else:
-            MainView().notify_alert(8, [file_path, ""])
-            MainView().user_prompts(0, ["", ""])
+            self.view.notify_alert(8, [file_path, ""])
+            self.view.user_prompts(0, ["", ""])
             return []
     
     def list_all_players(self):
@@ -241,7 +242,7 @@ class PlayerController:
         if self.data_file_exists("players"):
             ReportController().list_all_players()
         else:
-            MainView().clear_screen()
-            MainView().menu_header(9)
-            MainView().notify_alert(11, ['data/players.json', ""])
-            MainView().user_prompts(0, ["", ""])
+            self.view.clear_screen()
+            self.view.menu_header(9)
+            self.view.notify_alert(11, ['data/players.json', ""])
+            self.view.user_prompts(0, ["", ""])

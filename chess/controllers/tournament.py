@@ -17,24 +17,24 @@ class TournamentController:
     """Contrôleur de gestion des tournois"""
 
     def __init__(self):
-        pass
+        self.view = MainView()
         
     def tournament_menu(self):
         """ menu de gestion des tournois """
         invalid_input = 0
         while True:
             if invalid_input == 0:
-                MainView().clear_screen()
-                MainView().tournament_menu()
+                self.view.clear_screen()
+                self.view.display_menu("tournament")
             
-            choice = MainView().user_prompts(21, ["", ""])
+            choice = self.view.user_prompts(21, ["", ""])
 
             if choice in ["1", "2", "3", "4"]:
                 invalid_input = 0
                 if choice == "1":
                     self.create_tournament()  # self.create_tournament()
                 elif choice == "2":
-                    self.can_resume_tournament()  # self.launch_tournament()
+                    self.can_resume_tournament()  # self.can_resume_tournament()
                 elif choice == "3":
                     ReportController().list_all_tournaments()  # ReportController().list_tournaments()
                 elif choice == "4":
@@ -42,7 +42,7 @@ class TournamentController:
             else:
                 # Invalid input
                 invalid_input = 1
-                MainView().invalid_input(0, ["", ""])
+                self.view.invalid_input(0, ["", ""])
     
     def data_file_exists(self, file_name):
         """ returns bool """
@@ -91,47 +91,90 @@ class TournamentController:
     
     def create_tournament(self):
         """ menu de creation de tournoi """
-        MainView().clear_screen()
-        MainView().menu_header(7)
-        save = True
-        if self.data_file_exists("pending_tournament"):
-            save = False
-            MainView().notify_alert(5, ["", ""])
-            sure = MainView().user_prompts(5, ["", ""])
-            if sure in ["y", "yes", "o", "oui"]:
-                save = True
-        
-        if save:
-            tournament_details = self.get_tournament_details()
-            print("Titre: ", tournament_details[0])
-            print("Ville: ", tournament_details[1])
-            TournamentDataManager().save_new_tournament(tournament_details)          
-            MainView().notify_alert(9, ["", ""])
-            MainView().user_prompts(0, ["", ""])
+        self.view.clear_screen()
+        self.view.menu_header(7)
+        new_tournament = self.get_tournament_details()
+        tournament = TournamentDataManager().initialize_tournament_list(new_tournament)
+        TournamentDataManager().save_new_tournament(tournament)
+        self.view.notify_alert(24, [tournament.tournament_name, tournament.city])
+        self.view.notify_alert(9, ["", ""])
+        self.view.user_prompts(0, ["", ""])
     
     def get_tournament_details(self):
-        """ returns [tournament_details_list] """
+        """ returns Tournament """
         number_of_players = self.get_tournement_how_many_players()
         tour_players = self.get_tournament_automatic(number_of_players)
+        tour_rounds = self.get_tournament_rounds()
         
-        if len(tour_players) == 0:
-            for n in range(number_of_players):
-                MainView().notify_alert(7, [n + 1, number_of_players])
-                new_player = [PlayerController().get_player_details("tournament")]
+        if len(tour_players) == 0:        
+            bdd_players = False
+            if self.data_file_exists("players"):
+                while True:
+                    # demander à l'user s'il veut ajouter des joueurs de la BDD
+                    bdd_players = str(self.view.user_prompts(26, ["", ""])).lower()
+                    if bdd_players in ["y", "yes", "o", "oui"]:
+                        bdd_players = True
+                        break
+                    else:
+                        bdd_players = False
+                        break
+            
+            if bdd_players:
+                # option pour ranger par "last_name", "player_id", "birth_date"...
+                players_list = PlayerDataManager().list_players("last_name")
+                page_size = 20
+                total_players = len(players_list)
+                total_pages = (total_players // page_size) + (1 if total_players % page_size != 0 else 0)
+                
+                for page in range(total_pages):
+                    if len(tour_players) < number_of_players:
+                        self.view.clear_screen()
+                        self.view.menu_header(9)
+                        self.view.notify_alert(27, [len(tour_players), number_of_players])
+                        self.view.notify_alert(25, [page + 1, total_pages])
+                        start_index = page * page_size
+                        end_index = start_index + page_size
+                        page_data = players_list[start_index:end_index]
+                        self.view.display_table("pick_player", page_data)
+                        player_nbr = len(page_data)
+                        while True:
+                            bdd_player = str(self.view.user_prompts(27, [player_nbr, ""])).lower()
+                            if bdd_player == "":
+                                break
+                            else:
+                                try:
+                                    bdd_player = int(bdd_player)
+                                    if 1 <= bdd_player <= player_nbr:
+                                        # comparer avec la liste des joueurs déjà présents
+                                        player_data = page_data[bdd_player - 1]
+                                        chosen_player = list(player_data.values())
+                                        if chosen_player in tour_players :
+                                            self.view.notify_alert(26, ["", ""])
+                                        else:
+                                            tour_players.append(chosen_player)
+                                            self.view.clear_screen()
+                                            self.view.menu_header(9)
+                                            self.view.notify_alert(27, [len(tour_players), number_of_players])
+                                            self.view.notify_alert(25, [page + 1, total_pages])
+                                            self.view.display_table("pick_player", page_data)
+                                            
+                                except ValueError:
+                                    self.view.invalid_input(16, [1, player_nbr])
+                    
+            for n in range(number_of_players - len(tour_players)):
+                self.view.notify_alert(7, [len(tour_players), number_of_players])
+                new_player = list([PlayerController().get_player_details("tournament")][0])
                 tour_players.append(new_player)
-        
-            tour_rounds = self.get_tournament_rounds()
-            tour_desc = MainView().user_prompts(11, ["", ""])
-            tour_city = MainView().user_prompts(12, ["", ""])
-            tour_title = MainView().user_prompts(13, ["", ""])
+            tour_desc = self.view.user_prompts(11, ["", ""])
+            tour_city = self.view.user_prompts(12, ["", ""])
+            tour_title = self.view.user_prompts(13, ["", ""])
         else:
-            tour_rounds = self.get_tournament_rounds()
             tour_desc = ""
             title_city = self.generate_random_tour_title_city()
+            tour_city = title_city[1]
             tour_title = title_city[0]
-            tour_city = title_city[1]  
         
-        tournament_details = []
+        new_tournament = []
         if len(tour_players) > 0:
             PlayerDataManager().save_player_list(tour_players)
         
@@ -142,32 +185,32 @@ class TournamentController:
             tour_beg_date = ""
             tour_end_date = ""
             
-            tournament_details = [
-                tour_title, 
-                tour_city, 
-                tour_desc, 
-                tour_players, 
-                tour_rounds, 
-                tour_round, 
-                tour_rounds_results, 
-                tour_final_results, 
-                tour_beg_date, 
+            new_tournament = [
+                tour_title,
+                tour_city,
+                tour_desc,
+                tour_players,
+                tour_rounds,
+                tour_round,
+                tour_rounds_results,
+                tour_final_results,
+                tour_beg_date,
                 tour_end_date
             ]
-            
-        return tournament_details
+        
+        return new_tournament
     
     def get_tournement_how_many_players(self):
         """ returns int number_of_players """
         while True:   
             try:
-                number_of_players = int(MainView().user_prompts(6, ["", ""]))
+                number_of_players = int(self.view.user_prompts(6, ["", ""]))
                 if 8 <= number_of_players <= 98:
                     break
                 else:
-                    MainView().invalid_input(7, ["", ""])
+                    self.view.invalid_input(7, ["", ""])
             except ValueError:
-                MainView().invalid_input(7, ["", ""])
+                self.view.invalid_input(7, ["", ""])
         
         return number_of_players
     
@@ -175,10 +218,11 @@ class TournamentController:
         """ returns list of tournament players """
         tour_players = []
         while True:
-            automatic = MainView().user_prompts(7, ["", ""])
+            # demander si l'user veut ajouter des joueurs aleatoires (debug func)
+            automatic = str(self.view.user_prompts(7, ["", ""])).lower()
             if automatic in ["y", "yes", "o", "oui"]:
-                MainView().notify_alert(6, ["", ""])
-                sure = MainView().user_prompts(5, ["", ""])
+                self.view.notify_alert(6, ["", ""])
+                sure = str(self.view.user_prompts(5, ["", ""])).lower()
                 if sure in ["y", "yes", "o", "oui"]:
                     tour_players = PlayerController().generate_random_players(number_of_players)
                     break
@@ -189,10 +233,18 @@ class TournamentController:
         
         return tour_players
     
+    def get_round_score_automatic(self):
+        while True:
+            automatic = str(self.view.user_prompts(22, ["", ""])).lower()
+            if automatic in ["y", "yes", "o", "oui"]:
+                return True
+            else:
+                return False
+    
     def get_tournament_rounds(self):
         """ returns int(tour_rounds) """
         while True:
-            tour_rounds = MainView().user_prompts(10, ["", ""])
+            tour_rounds = self.view.user_prompts(10, ["", ""])
             if tour_rounds in ["0", ""]:
                 tour_rounds = "4"
             try:
@@ -200,30 +252,59 @@ class TournamentController:
                 if 1 <= tour_rounds <= 99:
                     break
                 else:
-                    MainView().invalid_input(11, ["", ""])
+                    self.view.invalid_input(11, ["", ""])
             except ValueError:
-                MainView().invalid_input(11, ["", ""])
+                self.view.invalid_input(11, ["", ""])
         
         return tour_rounds
     
     def can_resume_tournament(self):
-        """ verifie le statue de pending_tournament """
-        MainView().clear_screen()
-        MainView().menu_header(8)
-        if self.data_file_exists("pending_tournament"):
-            self.tournament_status()
+        """ verifie le statut de pending_tournament """
+        self.view.clear_screen()
+        self.view.menu_header(8)
+        
+        if self.data_file_exists("tournaments"):
+            tournaments = TournamentDataManager().list_tournaments()
+            pending_tournaments = [data for data in tournaments if data['end_date'] == ""]
+            
+            if pending_tournaments:
+                self.pick_tournament(pending_tournaments)
+            else:
+                self.view.notify_alert(10, ["", ""])
+                self.view.user_prompts(0, ["", ""])
         else:
-            MainView().notify_alert(10, ["", ""])
-            MainView().user_prompts(0, ["", ""])
+            self.view.notify_alert(10, ["", ""])
+            self.view.user_prompts(0, ["", ""])
     
-    def tournament_status(self):
+    def pick_tournament(self, pending_tournaments):
+        """ choisir un tournoi à reprendre """
+        self.view.clear_screen()
+        self.view.menu_header(8)
+        self.view.display_table("pick_tournament", pending_tournaments)
+        while True:
+            try:
+                choice = int(self.view.user_prompts(20, ["", ""]))
+                if 1 <= choice <= len(pending_tournaments):
+                    break
+                else:
+                    self.view.invalid_input(13, ["", ""])
+            except ValueError:
+                self.view.invalid_input(13, ["", ""])
+        
+        selected_tournament = pending_tournaments[choice - 1]
+        self.tournament_status(selected_tournament)
+    
+    def tournament_status(self, selected_tournament):
         """ détermine quel methode appliquer pour reprendre le tournoi """
-        if TournamentDataManager().has_tournament_started():
-            self.resume_tournament([])
+        tournament = TournamentDataManager().initialize_tournament_dict(selected_tournament)
+       
+        if selected_tournament.get('beg_date') == "":
+            self.start_tournament(tournament)
         else:
-            self.start_tournament()
+            self.resume_tournament(tournament)
     
-    def db_get_tournament_data(self):
+    
+    def db_get_tournament_data(self): ### POSSIBLEMENT A DETRUIRE 
         """ returns list of tournament_details """
         tournament_data = TournamentDataManager().get_tournament_data()
         tour_title = tournament_data[0].get('tournament_name')
@@ -250,27 +331,18 @@ class TournamentController:
         ]
         return tournament_details
     
-    def start_tournament(self):
-        """ démarre le tournoi """
-        tournament_data = self.db_get_tournament_data()
+    def start_tournament(self, tournament):
+        """ démarre le tournoi """   
         tour_round = 1
-        tour_rounds_results = self.prepare_first_round(tournament_data[3])
+        tour_rounds_results = self.prepare_first_round(tournament.players)
         tour_beg_date = datetime.now().strftime('%Y-%m-%d_%H:%M')
         
-        tournament_details = [
-            tournament_data[0], 
-            tournament_data[1], 
-            tournament_data[2], 
-            tournament_data[3], 
-            tournament_data[4], 
-            tour_round, 
-            tour_rounds_results, 
-            tournament_data[7], 
-            tour_beg_date, 
-            tournament_data[9]
-        ]
-        TournamentDataManager().update_tournament(tournament_details)
-        self.resume_tournament(tournament_details)
+        tournament.round = tour_round
+        tournament.rounds_results = tour_rounds_results
+        tournament.beg_date = tour_beg_date
+        
+        TournamentDataManager().update_tournament(tournament)
+        self.resume_tournament(tournament)
     
     def prepare_first_round(self, players):
         """ returns list [first_round] """
@@ -334,24 +406,23 @@ class TournamentController:
         
         return results
     
-    def prepare_next_round(self, tournament_data):
+    def prepare_next_round(self, tournament):
         """ prepares next round """
-        MainView().clear_screen()
-        MainView().menu_header(8)
-        players = tournament_data[3]
-        players_ranks = self.players_ranks(tournament_data[6])
-        tour_rounds_results = tournament_data[6]
-        tour_round = len(tournament_data[6]) + 1
+        self.view.clear_screen()
+        self.view.menu_header(8)
+        players = tournament.players
+        tour_rounds_results = tournament.rounds_results
+        players_ranks = self.players_ranks(tour_rounds_results)
+        
+        tour_round = len(tour_rounds_results) + 1
         round_content = []
 
         previous_pairs = self.get_match_data(tour_rounds_results, "pairs")
         available_players = players_ranks.copy()
         
         while available_players:
-            # deux premiers joueurs disponibles
-            player1 = available_players.pop(0)
-
             # trouver un adversaire qui n'a pas déjà joué contre player1
+            player1 = available_players.pop(0)
             for idx, potential_opponent in enumerate(available_players):
                 if [player1, potential_opponent] not in previous_pairs and [potential_opponent, player1] not in previous_pairs:
                     player2 = available_players.pop(idx)
@@ -367,126 +438,134 @@ class TournamentController:
         
         tour_rounds_results.append([f"Round {tour_round}", round_content])
 
-        tournament_details = [
-            tournament_data[0], 
-            tournament_data[1], 
-            tournament_data[2], 
-            tournament_data[3], 
-            tournament_data[4], 
-            tour_round, 
-            tour_rounds_results, 
-            tournament_data[7], 
-            tournament_data[8],
-            tournament_data[9]
-        ]
+        tournament.round = tour_round
+        tournament.rounds_results = tour_rounds_results
 
-        TournamentDataManager().update_tournament(tournament_details)
-        self.resume_tournament(tournament_details)
+        TournamentDataManager().update_tournament(tournament)
+        self.resume_tournament(tournament)
     
-    def tournament_results(self, tournament_data):
+    def tournament_results(self, tournament):
         """ prepare l'affichage des scores finaux """
-        players_ranks = self.players_ranks(tournament_data[6])
+        tour_name = tournament.tournament_name
+        tour_city = tournament.city
+        tour_beg_date = tournament.beg_date
         tour_end_date = datetime.now().strftime('%Y-%m-%d_%H:%M')
-        tournament_details = [
-            tournament_data[0], 
-            tournament_data[1], 
-            tournament_data[2], 
-            tournament_data[3], 
-            tournament_data[4], 
-            tournament_data[5], 
-            tournament_data[6], 
-            players_ranks, 
-            tournament_data[8],
-            tour_end_date
-        ]
-        TournamentDataManager().update_tournament(tournament_details)
-        TournamentDataManager().close_tournament(tournament_data[1], tournament_data[8])
-        MainView().clear_screen()
-        MainView().menu_header(8)
-        MainView().tournament_final_rank(tournament_data[0], tournament_data[1],
-                                         tournament_data[8], tour_end_date, players_ranks)
-        MainView().user_prompts(19, ["", ""])
-    
-    def resume_tournament(self, tournament_details):
-        """ reprends le tournoi en cours """
-        if len(tournament_details) == 0:
-            tournament_details = self.db_get_tournament_data()
+        players_ranks = self.players_ranks(tournament.rounds_results)
         
-        tour_title = tournament_details[0]
-        tour_city = tournament_details[1]
-        tour_desc = tournament_details[2]
-        tour_players = tournament_details[3]
-        tour_rounds = tournament_details[4]
-        tour_round = tournament_details[5]
-        tour_rounds_results = tournament_details[6]
-        tour_final_results = tournament_details[7]
-        tour_beg_date = tournament_details[8]
-        tour_end_date = tournament_details[9]
+        tournament.final_results = players_ranks
+        tournament.end_date = tour_end_date
+        
+        TournamentDataManager().update_tournament(tournament)
+        self.view.clear_screen()
+        self.view.menu_header(8)
+        view.display_table("tournament_final_rank", players_ranks, 
+                            additional_info=(tour_name, tour_city, tour_beg, tour_end))
+        self.view.user_prompts(19, ["", ""])
+    
+    def tournament_display(self, tour_title, tour_city, tour_round, current_round):
+        self.view.clear_screen()
+        self.view.menu_header(8)
+        self.view.notify_alert(17, [tour_title, tour_city])
+        self.view.notify_alert(18, [tour_round, tour_rounds])
+        self.view.display_table("round_matches", current_round)
+    
+    def resume_tournament(self, tournament):
+        """ reprends le tournoi en cours """
+        tour_title = tournament.tournament_name
+        tour_city = tournament.city
+        tour_desc = tournament.description
+        tour_players = tournament.players
+        tour_rounds = tournament.rounds
+        tour_round = tournament.round
+        tour_rounds_results = tournament.rounds_results
+        tour_final_results = tournament.final_results
+        tour_beg_date = tournament.beg_date
+        tour_end_date = tournament.end_date
         
         number_of_matches = int(len(tour_players)/2)
-        updated_rounds_results = tour_rounds_results
+        current_round_index = tour_round - 1
+        current_round = tour_rounds_results[current_round_index]
+        current_date = datetime.now().strftime("%Y-%m-%d_%H:%M")
         
-        for i, tour_round_result in enumerate(tour_rounds_results):
-            round_name, matches = tour_round_result
-            tour_round = i + 1
-            for j, match in enumerate(matches):
-                match_dates, players, scores = match
-                round_match = j + 1
-                if match_dates[0] == "" or match_dates[1] == "":
-                    player1 = players[0]
-                    player2 = players[1]
-                    p1name = f"{player1[1]} {player1[2]}"
-                    p2name = f"{player2[1]} {player2[2]}"
-                    
-                    MainView().notify_alert(17, [tour_title, tour_city])
-                    MainView().notify_alert(18, [tour_round, tour_rounds])
-                    MainView().notify_alert(19, [round_match, number_of_matches])
-                    MainView().user_prompts(15, [p1name, p2name])
-                    start_time = datetime.now().strftime("%Y-%m-%d_%H:%M")
-                    MainView().clear_screen()
-                    MainView().menu_header(8)
-                    MainView().notify_alert(17, [tour_title, tour_city])
-                    MainView().notify_alert(18, [tour_round, tour_rounds])
-                    MainView().notify_alert(19, [round_match, number_of_matches])
-                    MainView().notify_alert(20, [p1name, p2name])
-                    score_j1 = MainView().user_prompts(16, [p1name, ""])
-
-                    while not re.match(r'^(0|0\.5|1)$', score_j1):
-                        MainView().invalid_input(12, ["", ""])
-                        score_j1 = MainView().user_prompts(16, [p1name, ""])
-
-                    score_j1 = float(score_j1)
-                    score_j2 = 1.0 - score_j1 if score_j1 in [0, 1] else 0.5
-                    scores = [score_j1, score_j2]
-
-                    end_time = datetime.now().strftime("%Y-%m-%d_%H:%M")
-                    matches[j][0] = [start_time, end_time]
-
-                    updated_rounds_results[i][1][j] = [[start_time, end_time], players, scores]
-                    tournament_details = [
-                        tour_title,
-                        tour_city,
-                        tour_desc,
-                        tour_players,
-                        tour_rounds,
-                        tour_round,
-                        updated_rounds_results,
-                        tour_final_results,
-                        tour_beg_date,
-                        tour_end_date,
-                    ]
-                    TournamentDataManager().update_tournament(tournament_details)
-                    MainView().clear_screen()
-                    MainView().menu_header(8)
+        update = False
+        for match in current_round[1]:
+            # insert de la date de début de round
+            if match[0][0] == "":
+                update = True
+                match[0][0] = current_date
         
+        if update :
+            tournament.rounds_results[current_round_index] = current_round
+            TournamentDataManager().update_tournament(tournament)
+        
+        self.tournament_display(tour_title, tour_city, tour_round, current_round[1])
+        
+        automatic = False
+        if all(match[2][0] == -1 for match in current_round[1]):
+            while True:
+                # demander si l'user veut des scores aleatoires (debug func)
+                auto_prompt = str(self.view.user_prompts(22, ["", ""])).lower()
+                if auto_prompt in ["y", "yes", "o", "oui"]:
+                    automatic = True
+                    break
+                else:
+                    break
+        
+        if automatic:
+            # remplissage automatique des scores
+            for match in current_round[1]:
+                if match[0][1] == "":
+                    score_1 = random.choice([0.0, 0.5, 1.0])
+                    score_2 = 0.0 if score_1 == 1.0 else 1.0 if score_1 == 0.0 else 0.5
+                    match[0][1] = current_date
+                    match[2][0] = score_1
+                    match[2][1] = score_2
+            
+            tournament.rounds_results[current_round_index] = current_round
+            TournamentDataManager().update_tournament(tournament)
+        
+        while any(match[0][1] == "" for match in current_round[1]):
+            # remplissage manuel des scores de chaque match d'un round
+            self.tournament_display(tour_title, tour_city, tour_round, current_round[1])
+            
+            while True:
+                max_index = len(current_round[1])
+                try:
+                    match_index = int(self.view.user_prompts(24, ["", ""])) - 1
+                    if 0 <= match_index <= max_index - 1:
+                        break
+                    else:
+                        self.view.invalid_input(14, ["", ""])
+                except ValueError:
+                    self.view.invalid_input(14, ["", ""])
+            
+            selected_match = current_round[1][match_index]
+            
+            while True:
+                try:
+                    match_p1 = f"{selected_match[1][0][1]} {selected_match[1][0][2]}"
+                    match_p2 = f"{selected_match[1][1][1]} {selected_match[1][1][2]}"
+                    score = int(self.view.user_prompts(25, [f"{match_p1}", f"{match_p2}"]))
+                    if 0 <= score <= 2:
+                        break
+                    else:
+                        self.view.invalid_input(15, ["", ""])
+                except ValueError:
+                    self.view.invalid_input(15, ["", ""])
+            
+            # Mettre à jour les scores et la date de fin de match
+            selected_match[2][0] = 0.5 if score == 0 else 1.0 if score == 1 else 0.0
+            selected_match[2][1] = 0.5 if score == 0 else 1.0 if score == 2 else 0.0
+            selected_match[0][1] = datetime.now().strftime('%Y-%m-%d_%H:%M')
+            
+            tournament.rounds_results[current_round_index] = current_round
+            TournamentDataManager().update_tournament(tournament)
+        
+        self.tournament_display(tour_title, tour_city, tour_round, current_round[1])
         if tour_round < tour_rounds:
-            MainView().clear_screen()
-            MainView().menu_header(8)
-            MainView().user_prompts(17, ["", ""])
-            self.prepare_next_round(tournament_details)
+            self.view.user_prompts(17, ["", ""])
+            self.prepare_next_round(tournament)
         else:
-            MainView().clear_screen()
-            MainView().menu_header(8)
-            MainView().user_prompts(18, ["", ""])
-            self.tournament_results(tournament_details)
+            self.view.user_prompts(18, ["", ""])
+            self.tournament_results(tournament)
     
