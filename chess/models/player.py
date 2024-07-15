@@ -51,6 +51,12 @@ class PlayerDataManager:
         player_query = Query()
         self.players_table.update(player_dict, player_query.player_id == player_id)
     
+    def replace_player(self, edited_player, old_id):
+        """ remplacer les data d'un joueur """
+        player_dict = edited_player.to_dict()
+        player_query = Query()
+        self.players_table.update(player_dict, player_query.player_id == old_id)
+    
     def save_player_list(self, players_list):
         """ sauvegarder la liste de joueurs """
         for player_data in players_list:

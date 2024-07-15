@@ -136,7 +136,7 @@ class ReportController:
             self.view.menu_header(13)
             self.view.notify_alert(22, [tour_info[0], tour_info[1]])
             self.view.notify_alert(23, [page + 1, ""])
-            self.view.display_table("match_list", round_results[page])
+            self.view.display_table("match_list", round_results[page][1])
             
             if page < total_pages - 1:
                 self.view.user_prompts(14, [page + 1, total_pages])

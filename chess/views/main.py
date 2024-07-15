@@ -129,7 +129,10 @@ class MainView:
             24: f"Titre : {values[0]}\nVille : {values[1]}",
             25: f"Page : {values[0]} / {values[1]}",
             26: "Action impossible, ce joueur est déjà enregistré dans le tournoi.",
-            27: f"Joueurs participants au nouveau tournoi : {values[0]} / {values[1]} "
+            27: f"Joueurs participants au nouveau tournoi : {values[0]} / {values[1]} ",
+            28: "(laissez vide pour passer)",
+            29: "Aucun joueur n'a été modifié.",
+            30: f"Joueur à modifier : {values[0]} {values[1]}"
         }
         message = texts.get(index, "Invalid alert index")
         print(message)
@@ -164,7 +167,7 @@ class MainView:
             24: "Quel match voulez-vous mettre à jour : ",
             25: f"[0] match nul, [1] {values[0]} a gagné, [2] {values[1]} a gagné : ",
             26: "Voulez-vous ajouter des joueurs de la BDD ? ",
-            27: f"Choisissez un index ([1]-[{values[0]}]) de joueur à ajouter ou laissez vide : "
+            27: f"Choisissez un index ([1]-[{values[0]}]) de joueur à {values[1]}\nou laissez vide pour passer : "
         }
         prompt_message = prompts.get(index, "Invalid prompt index")
         user_input = input(prompt_message).strip()
@@ -186,64 +189,58 @@ class MainView:
     def display_table(self, table_type, page_data, additional_info=None):
         """ affiche une table basée sur le type fourni """
         
-        if table_type == "round_matches":
-            my_table = PrettyTable(["ID", "Joueur 1", "Score J1", "Score J2", "Joueur 2"])
+        if table_type in ["round_matches", "match_list"]:
+            if table_type == "round_matches":
+                my_table = PrettyTable(["ID", "Joueur 1", "Score J1", "Score J2", "Joueur 2"])
+            else:
+                my_table = PrettyTable(["Début", "Joueur 1", "Score J1", "Score J2", "Joueur 2", "Fin"])
+            
             for index, data in enumerate(page_data):
                 match_id = index + 1
                 match_p1 = f"{data[1][0][1]} {data[1][0][2]}"
                 p1_score = data[2][0] if data[2][0] != -1 else ""
                 p2_score = data[2][1] if data[2][1] != -1 else ""
                 match_p2 = f"{data[1][1][1]} {data[1][1][2]}"
-                my_table.add_row([match_id, match_p1, p1_score, p2_score, match_p2])
-        
-        elif table_type == "match_list":
-            my_table = PrettyTable(["Début", "Joueur 1", "Score J1", "Score J2", "Joueur 2", "Fin"])
-            for index, data in enumerate(page_data[1]):
-                match_p1 = f"{data[1][0][1]} {data[1][0][2]}"
-                p1_score = data[2][0] if data[2][0] != -1 else ""
-                p2_score = data[2][1] if data[2][1] != -1 else ""
-                match_p2 = f"{data[1][1][1]} {data[1][1][2]}"
                 beg_date = data[0][0]
                 end_date = data[0][1]
-                my_table.add_row([beg_date, match_p1, p1_score, p2_score, match_p2, end_date])
+                if table_type == "match_list":
+                    my_table.add_row([beg_date, match_p1, p1_score, p2_score, match_p2, end_date])
+                else:
+                    my_table.add_row([match_id, match_p1, p1_score, p2_score, match_p2])
         
-        elif table_type == "player_list":
-            my_table = PrettyTable(["ID", "Prénom", "Nom", "Ddn"])
-            for data in page_data:
-                player_id = data.get("player_id", "N/A")
-                first_name = data.get("first_name", "N/A")
-                last_name = data.get("last_name", "N/A")
-                birth_date = data.get("birth_date", "N/A")
-                my_table.add_row([player_id, first_name, last_name, birth_date])
-        
-        elif table_type == "pick_player":
-            my_table = PrettyTable(["Index", "ID", "Prénom", "Nom", "Ddn"])
+        elif table_type in ["player_list", "pick_player"]:
+            if table_type == "player_list":
+                my_table = PrettyTable(["ID", "Prénom", "Nom", "Ddn"])
+            else:
+                my_table = PrettyTable(["Index", "ID", "Prénom", "Nom", "Ddn"])
+            
             for index, data in enumerate(page_data):
                 player_index = index + 1
                 player_id = data.get("player_id", "N/A")
                 first_name = data.get("first_name", "N/A")
                 last_name = data.get("last_name", "N/A")
                 birth_date = data.get("birth_date", "N/A")
-                my_table.add_row([player_index, player_id, first_name, last_name, birth_date])
+                if table_type == "pick_player":
+                    my_table.add_row([player_index, player_id, first_name, last_name, birth_date])
+                else:
+                    my_table.add_row([player_id, first_name, last_name, birth_date])
         
-        elif table_type == "tournament_list":
-            my_table = PrettyTable(["Titre", "Lieu", "Début", "Fin"])
-            for data in page_data:
+        elif table_type in ["tournament_list", "pick_tournament"]:
+            if table_type == "tournament_list":
+                my_table = PrettyTable(["Titre", "Lieu", "Début", "Fin"])
+            else:
+                my_table = PrettyTable(["ID", "Titre", "Lieu", "Début", "Fin"])
+            
+            for index, data in enumerate(page_data):
+                tour_id = index + 1
                 tour_title = data['tournament_name']
                 tour_city = data['city']
                 tour_beg = "Non débuté..." if data['beg_date'] == "" else data['beg_date']
                 tour_end = "Non débuté..." if tour_beg == "Non débuté..." else ("En cours..." if data['end_date'] == "" else data['end_date'])
-                my_table.add_row([tour_title, tour_city, tour_beg, tour_end])
-        
-        elif table_type == "choose_tournament" or table_type == "pick_tournament":
-            my_table = PrettyTable(["ID", "Titre", "Lieu", "Début", "Fin"])
-            for index, data in enumerate(page_data):
-                tour_id = index + 1
-                tour_title = data.get('tournament_name')
-                tour_city = data.get('city')
-                tour_beg = "Non débuté..." if data.get('beg_date') == "" else data.get('beg_date')
-                tour_end = "Non débuté..." if tour_beg == "Non débuté..." else ("En cours..." if data.get('end_date') == "" else data.get('end_date'))
-                my_table.add_row([tour_id, tour_title, tour_city, tour_beg, tour_end])
+                if table_type == "pick_tournament":
+                    my_table.add_row([tour_id, tour_title, tour_city, tour_beg, tour_end])
+                else:
+                    my_table.add_row([tour_title, tour_city, tour_beg, tour_end])
         
         elif table_type == "tournament_final_rank":
             tour_name, tour_city, tour_beg, tour_end = additional_info

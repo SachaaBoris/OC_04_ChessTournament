@@ -95,19 +95,101 @@ class PlayerController:
                 self.view.clear_screen()
                 self.view.menu_header(6)
                 ### proposer de modifier un joueur depuis une liste
-                player_id, first_name, last_name, birth_date = self.get_player_details("edit")
-                player = PlayerModel(player_id, first_name, last_name, birth_date)
-                PlayerDataManager().update_player(player)
-                self.view.notify_alert(4, ["", ""])
+                old_player = self.pick_a_player("edit", 1)
+                if len(old_player) > 0:
+                    op_id, op_first_name, op_last_name, op_birth_date = old_player
+                    self.view.clear_screen()
+                    self.view.menu_header(6)
+                    self.view.notify_alert(30, [f'{op_id}, {op_first_name}', f'{op_last_name}, {op_birth_date}'])
+                    new_player = self.get_player_details("edit")
+                    np_id, np_first_name, np_last_name, np_birth_date = new_player
+                    if any(var != "" for var in [np_id, np_first_name, np_last_name, np_birth_date]):
+                        np_id = op_id if np_id == "" else np_id
+                        np_first_name = op_first_name if np_first_name == "" else np_first_name
+                        np_last_name = op_last_name if np_last_name == "" else np_last_name
+                        np_birth_date = op_birth_date if np_birth_date == "" else np_birth_date
+                        player = PlayerModel(np_id, np_first_name, np_last_name, np_birth_date)
+                        if np_id == op_id:
+                            PlayerDataManager().update_player(player)
+                        else:
+                            PlayerDataManager().replace_player(player, op_id)
+                        
+                        self.view.notify_alert(4, ["", ""])
+                    else:
+                        self.view.notify_alert(29, ["", ""])
+                    
+                else:
+                    self.view.notify_alert(29, ["", ""])
+                
                 self.view.user_prompts(0, ["", ""])
+            
             else:
                 self.view.notify_alert(11, ["", ""])
                 self.view.user_prompts(0, ["", ""])
+        
         else:
             self.view.clear_screen()
             self.view.menu_header(6)
             self.view.notify_alert(11, ["", ""])
             self.view.user_prompts(0, ["", ""])
+    
+    def pick_a_player_header(self, values, mode):
+        self.view.clear_screen()
+        if mode == "tournament":
+            self.view.menu_header(9)
+            self.view.notify_alert(27, [values[0], values[1]])
+        else:
+            self.view.menu_header(6)
+        
+        self.view.notify_alert(25, [values[2], values[3]])
+    
+    def pick_a_player(self, mode, number_of_players):
+        ''' returns a player list or a player's data '''
+        players_list = PlayerDataManager().list_players("last_name")
+        # option pour ranger par "last_name", "player_id", "birth_date"...
+        page_size = 20
+        total_players = len(players_list)
+        total_pages = (total_players // page_size) + (1 if total_players % page_size != 0 else 0)
+        tour_players = []
+        
+        for page in range(total_pages):
+            if len(tour_players) < number_of_players:
+                self.pick_a_player_header([len(tour_players), number_of_players, page + 1, total_pages], mode)
+                start_index = page * page_size
+                end_index = start_index + page_size
+                page_data = players_list[start_index:end_index]
+                self.view.display_table("pick_player", page_data)
+                player_nbr = len(page_data)
+                while True:
+                    values = [player_nbr]
+                    if mode == "edit":
+                        values.append("modifier")
+                    else:
+                        values.append("ajouter")
+                    
+                    bdd_player = str(self.view.user_prompts(27, values)).lower()
+                    if bdd_player == "":
+                        break
+                    else:
+                        try:
+                            bdd_player = int(bdd_player)
+                            if 1 <= bdd_player <= player_nbr:  # comparer avec la liste des joueurs présents
+                                player_data = page_data[bdd_player - 1]
+                                chosen_player = list(player_data.values())
+                                if mode == "edit":
+                                    return chosen_player
+                                else:
+                                    if chosen_player in tour_players :
+                                        self.view.notify_alert(26, ["", ""])
+                                    else:
+                                        tour_players.append(chosen_player)
+                                        self.pick_a_player_header([len(tour_players), number_of_players, page + 1, total_pages], mode)
+                                        self.view.display_table("pick_player", page_data)
+                                    
+                        except ValueError:
+                            self.view.invalid_input(16, [1, player_nbr])
+        
+        return tour_players
     
     def vali_date(self, date_input):
         """ returns date input normalisée, is_valid bool, notify_index int """
@@ -133,51 +215,89 @@ class PlayerController:
                         return date_input, False, 4
                     elif age < 4:
                         return date_input, False, 5
+                    
                     return birth_date.strftime('%Y-%m-%d'), True, 0
+                
                 except ValueError:
                     return date_input, False, 3
+                
         return date_input, False, 3
 
     def get_player_details(self, mode):
         """ returns player_id, first_name, last_name, birth_date """
+        if mode == "edit":
+            self.view.notify_alert(28, ["", ""])
+        
         while True:
             player_id = self.view.user_prompts(1, ["", ""]).upper()
             if re.match(r"[A-Z]{2}\d{5}", player_id) and len(player_id) == 7:
-                if mode == "create":
+                if mode in ["create", "edit"]:
                     if not PlayerDataManager().id_exists(player_id):
                         break
                     else:
                         self.view.notify_alert(0, ["", ""])
-                elif mode == "edit":
-                    if PlayerDataManager().id_exists(player_id):
-                        break
-                    else:
-                        self.view.notify_alert(3, ["", ""])
+                
                 elif mode == "tournament":
                     break
                 
             else:
-                self.view.invalid_input(6, ["", ""])
+                if mode == "edit":
+                    if player_id == "":
+                        break
+                    else:
+                        self.view.invalid_input(6, ["", ""])
+                
+                else:    
+                    self.view.invalid_input(6, ["", ""])
             
         while True:
             first_name = self.view.user_prompts(2, ["", ""])
             if first_name and first_name.replace("-", "").isalpha():
                 break
-            self.view.invalid_input(1, ["", ""])
+            else:
+                if mode == "edit":
+                    if first_name == "":
+                        break
+                    else:
+                        self.view.invalid_input(1, ["", ""])
+                
+                else:
+                    self.view.invalid_input(1, ["", ""])
         
         while True:
             last_name = self.view.user_prompts(3, ["", ""])
             if last_name and last_name.replace("-", "").isalpha():
                 break
-            self.view.invalid_input(2, ["", ""])
+            else:
+                if mode == "edit":
+                    if last_name == "":
+                        break
+                    else:
+                        self.view.invalid_input(2, ["", ""])
+                
+                else:
+                    self.view.invalid_input(2, ["", ""])
 
         while True:
             birth_date = self.view.user_prompts(4, ["", ""])
-            valid_date = self.vali_date(birth_date)
-            if valid_date[1]:
-                birth_date = valid_date[0]
-                break
-            self.view.invalid_input(valid_date[2], ["", ""])
+            if mode != "edit":
+                valid_date = self.vali_date(birth_date)
+                if valid_date[1]:
+                    birth_date = valid_date[0]
+                    break
+                else:
+                    self.view.invalid_input(valid_date[2], ["", ""])
+            
+            else:
+                if birth_date == "":
+                    break
+                else:
+                    valid_date = self.vali_date(birth_date)
+                    if valid_date[1]:
+                        birth_date = valid_date[0]
+                        break
+                    else:
+                        self.view.invalid_input(valid_date[2], ["", ""])
     
         return player_id, first_name, last_name, birth_date
     
@@ -224,6 +344,7 @@ class PlayerController:
                 else:
                     prenom = random.choice(en_names[0])
                     nom = random.choice(en_names[1])
+                
                 first_name = prenom
                 last_name = nom
                 birth_date = self.generate_random_date()

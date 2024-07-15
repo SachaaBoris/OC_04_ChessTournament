@@ -1,6 +1,6 @@
 Run("_cmd.bat")
 sleep(500)
-Send("venv\Scripts\activate")
+Send("chess\venv\Scripts\activate")
 Send("{ENTER}")
 sleep(500)
 Send("py chess")

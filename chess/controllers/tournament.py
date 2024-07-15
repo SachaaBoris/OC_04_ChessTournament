@@ -120,47 +120,8 @@ class TournamentController:
                         break
             
             if bdd_players:
-                # option pour ranger par "last_name", "player_id", "birth_date"...
-                players_list = PlayerDataManager().list_players("last_name")
-                page_size = 20
-                total_players = len(players_list)
-                total_pages = (total_players // page_size) + (1 if total_players % page_size != 0 else 0)
-                
-                for page in range(total_pages):
-                    if len(tour_players) < number_of_players:
-                        self.view.clear_screen()
-                        self.view.menu_header(9)
-                        self.view.notify_alert(27, [len(tour_players), number_of_players])
-                        self.view.notify_alert(25, [page + 1, total_pages])
-                        start_index = page * page_size
-                        end_index = start_index + page_size
-                        page_data = players_list[start_index:end_index]
-                        self.view.display_table("pick_player", page_data)
-                        player_nbr = len(page_data)
-                        while True:
-                            bdd_player = str(self.view.user_prompts(27, [player_nbr, ""])).lower()
-                            if bdd_player == "":
-                                break
-                            else:
-                                try:
-                                    bdd_player = int(bdd_player)
-                                    if 1 <= bdd_player <= player_nbr:
-                                        # comparer avec la liste des joueurs déjà présents
-                                        player_data = page_data[bdd_player - 1]
-                                        chosen_player = list(player_data.values())
-                                        if chosen_player in tour_players :
-                                            self.view.notify_alert(26, ["", ""])
-                                        else:
-                                            tour_players.append(chosen_player)
-                                            self.view.clear_screen()
-                                            self.view.menu_header(9)
-                                            self.view.notify_alert(27, [len(tour_players), number_of_players])
-                                            self.view.notify_alert(25, [page + 1, total_pages])
-                                            self.view.display_table("pick_player", page_data)
-                                            
-                                except ValueError:
-                                    self.view.invalid_input(16, [1, player_nbr])
-                    
+                tour_players = player_Controller.pick_a_player("tournament", number_of_players)
+            
             for n in range(number_of_players - len(tour_players)):
                 self.view.notify_alert(7, [len(tour_players), number_of_players])
                 new_player = list([PlayerController().get_player_details("tournament")][0])
