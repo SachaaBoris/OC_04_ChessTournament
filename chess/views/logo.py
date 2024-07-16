@@ -1,5 +1,4 @@
 from views.main import MainView
-import time
 
 
 class ChessLogo:
@@ -34,5 +33,5 @@ class ChessLogo:
         ]
         for line in chess_logo:
             print(f"{line}")
-        
+
         return input(" ")

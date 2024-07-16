@@ -17,9 +17,9 @@ class MainController:
             if invalid_input == 0:
                 self.view.clear_screen()
                 self.view.display_menu("main")
-            
+
             choice = self.view.user_prompts(21, ["", ""])
-            
+
             if choice in ["1", "2", "3", "4"]:
                 invalid_input = 0
                 if choice == "1":
@@ -29,10 +29,10 @@ class MainController:
                 elif choice == "3":
                     ReportController().report_menu()  # ReportController().report_menu()
                 elif choice == "4":
-                    quit_app = self.view.quit_message()  # Quit
+                    self.view.quit_message()  # Quit
                     break
+
             else:
                 # Invalid input
                 invalid_input = 1
-                self.view.invalid_input(0, ["",""])
-    
+                self.view.invalid_input(0, ["", ""])

@@ -1,5 +1,4 @@
 import os
-import time
 from prettytable import PrettyTable
 from datetime import datetime
 
@@ -10,7 +9,7 @@ class MainView:
     def clear_screen(self):
         """ reset l'affichage """
         os.system('cls' if os.name == 'nt' else 'clear')
-    
+
     def menu_header(self, index):
         """ affiche un header """
         texts = {
@@ -27,15 +26,15 @@ class MainView:
             10: "Liste des tournois\n",
             11: "Nom, ville & date d'un tournoi\n",
             12: "Liste des joueurs d'un tournoi\n",
-            13: "Liste de tous les matchs d'un tournoi\n"            
+            13: "Liste de tous les matchs d'un tournoi\n"
         }
         message = texts.get(index, "Invalid header index")
-        print(f"Chess Tournament Manager v0.1\n" + f"{message}")
-    
+        print("Chess Tournament Manager v0.1\n" + f"{message}")
+
     def display_menu(self, type):
         """ affiche le menu du type voulu """
-        
-        if type =="main":  # affiche le menu principal
+
+        if type == "main":  # affiche le menu principal
             self.menu_header(1)
             texts = [
                 "1 - Gestion des joueurs",
@@ -43,8 +42,8 @@ class MainView:
                 "3 - Générer des rapports",
                 "4 - Quitter\n"
             ]
-        
-        if type =="player":  # affiche le menu de gestion des joueurs
+
+        if type == "player":  # affiche le menu de gestion des joueurs
             self.menu_header(2)
             texts = [
                 "1 - Ajouter un joueur",
@@ -52,8 +51,8 @@ class MainView:
                 "3 - Voir la liste des joueurs",
                 "4 - Revenir au menu principal\n"
             ]
-        
-        if type =="tournament":  # affiche le menu de gestion des tournois
+
+        if type == "tournament":  # affiche le menu de gestion des tournois
             self.menu_header(3)
             texts = [
                 "1 - Préparer un tournoi",
@@ -61,8 +60,8 @@ class MainView:
                 "3 - Voir la liste des tournois",
                 "4 - Revenir au menu principal\n"
             ]
-        
-        if type =="report":  #affiche le menu des rapports
+
+        if type == "report":  # affiche le menu des rapports
             self.menu_header(4)
             texts = [
                 "1 - Liste des joueurs enregistrés",
@@ -72,10 +71,10 @@ class MainView:
                 "5 - Lister tous les matchs de tous les tours d'un tournoi spécifique",
                 "6 - Revenir au menu principal\n"
             ]
-        
+
         for text in texts:
             print(f"{text}")
-    
+
     def invalid_input(self, index, values):
         """ affiche une alerte """
         texts = {
@@ -99,7 +98,7 @@ class MainView:
         }
         message = texts.get(index, "Invalid index")
         print(message)
-    
+
     def notify_alert(self, index, values):
         """ affiche une notification """
         texts = {
@@ -133,11 +132,13 @@ class MainView:
             27: f"Joueurs participants au nouveau tournoi : {values[0]} / {values[1]} ",
             28: "(laissez vide pour passer)",
             29: "Aucun joueur n'a été modifié.",
-            30: f"Joueur à modifier : {values[0]} {values[1]}"
+            30: f"Joueur à modifier : {values[0]} {values[1]}",
+            31: "Erreur de decodage Json.",
+            32: "L'attribut 'players' n'existe pas dans le dictionnaire."
         }
         message = texts.get(index, "Invalid alert index")
         print(message)
-    
+
     def user_prompts(self, index, values):
         """ affiche les prompts utilisateurs """
         prompts = {
@@ -179,23 +180,23 @@ class MainView:
             return user_input.title()
         else:
             return user_input
-    
+
     def quit_message(self):
         """ affiche un message d'adieu """
         MainView().clear_screen()
         self.menu_header(0)
         print("Merci d'avoir utilisé Chess Tournament Manager.")
         print("\nProgram quits elegantly.")
-    
+
     def display_table(self, table_type, page_data, additional_info=None):
         """ affiche une table basée sur le type fourni """
-        
+
         if table_type in ["round_matches", "match_list"]:
             if table_type == "round_matches":
                 my_table = PrettyTable(["ID", "Joueur 1", "Score J1", "Score J2", "Joueur 2", "Durée"])
             else:
                 my_table = PrettyTable(["Début", "Joueur 1", "Score J1", "Score J2", "Joueur 2", "Fin", "Durée"])
-            
+
             for index, data in enumerate(page_data):
                 match_id = index + 1
                 match_p1 = f"{data[1][0][1]} {data[1][0][2]}"
@@ -204,7 +205,7 @@ class MainView:
                 match_p2 = f"{data[1][1][1]} {data[1][1][2]}"
                 beg_date = data[0][0]
                 end_date = data[0][1]
-                
+
                 if end_date != "":
                     start_datetime = datetime.strptime(beg_date, "%Y-%m-%d_%H:%M")
                     end_datetime = datetime.strptime(end_date, "%Y-%m-%d_%H:%M")
@@ -215,7 +216,6 @@ class MainView:
                     beg_date = f"{beg_date.split('_')[1]}"
                     end_date = f"{end_date.split('_')[1]}"
                 else:
-                    
                     if beg_date == "":
                         beg_date = "X"
                         end_date = "X"
@@ -223,18 +223,18 @@ class MainView:
                     else:
                         beg_date = f"Started @ {beg_date.split('_')[1]}"
                         duration = "X" if table_type == "match_list" else beg_date
-                
+
                 if table_type == "match_list":
                     my_table.add_row([beg_date, match_p1, p1_score, p2_score, match_p2, end_date, duration])
                 else:
                     my_table.add_row([match_id, match_p1, p1_score, p2_score, match_p2, duration])
-        
+
         elif table_type in ["player_list", "pick_player"]:
             if table_type == "player_list":
                 my_table = PrettyTable(["ID", "Prénom", "Nom", "Ddn"])
             else:
                 my_table = PrettyTable(["Index", "ID", "Prénom", "Nom", "Ddn"])
-            
+
             for index, data in enumerate(page_data):
                 player_index = index + 1
                 player_id = data.get("player_id", "N/A")
@@ -245,24 +245,25 @@ class MainView:
                     my_table.add_row([player_index, player_id, first_name, last_name, birth_date])
                 else:
                     my_table.add_row([player_id, first_name, last_name, birth_date])
-        
+
         elif table_type in ["tournament_list", "pick_tournament"]:
             if table_type == "tournament_list":
                 my_table = PrettyTable(["Titre", "Lieu", "Début", "Fin"])
             else:
                 my_table = PrettyTable(["ID", "Titre", "Lieu", "Début", "Fin"])
-            
+
             for index, data in enumerate(page_data):
                 tour_id = index + 1
                 tour_title = data['tournament_name']
                 tour_city = data['city']
                 tour_beg = "Non débuté..." if data['beg_date'] == "" else data['beg_date']
-                tour_end = "Non débuté..." if tour_beg == "Non débuté..." else ("En cours..." if data['end_date'] == "" else data['end_date'])
+                tour_end = "Non débuté..." if tour_beg == "Non débuté..." else (
+                    "En cours..." if data['end_date'] == "" else data['end_date'])
                 if table_type == "pick_tournament":
                     my_table.add_row([tour_id, tour_title, tour_city, tour_beg, tour_end])
                 else:
                     my_table.add_row([tour_title, tour_city, tour_beg, tour_end])
-        
+
         elif table_type == "tournament_final_rank":
             tour_name, tour_city, tour_beg, tour_end = additional_info
             print(f"Résultats du {tour_name} in {tour_city}")
@@ -274,5 +275,5 @@ class MainView:
                 last_name = data[2]
                 score = data[3]
                 my_table.add_row([player_id, first_name, last_name, score])
-        
+
         print(my_table)
