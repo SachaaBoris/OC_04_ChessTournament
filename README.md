@@ -1,7 +1,5 @@
 # OC_04_ChessTournament  :chess_pawn:  
   
-WIP !!!  :construction_worker:  
-  
 # ● Description du projet  
 Ce programme répond à la demande d'une amie pour aider son club d'échecs dans la gestion de ses tournois.  
 L'objectif est de pouvoir sauvegarder et maintenir une base de données de joueurs et une base de données de tournois. Il permet d'ajouter des joueurs, editer des joueurs, lister les joueurs, créer des tournois, ajouter des joueurs à un tournoi, rentrer les scores de chaque match, pour chaque round d'un tournoi, reprendre un tournoi laissé en suspend, suivre les scores des joueurs, lister les tournois et revoir les données enregistrées des tournois passés ou en cours.
