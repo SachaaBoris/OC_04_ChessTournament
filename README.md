@@ -11,26 +11,26 @@ L'objectif est de pouvoir sauvegarder et maintenir une base de données de joueu
 Avoir Python 3 installé  
 Avoir téléchargé et dézipé l'archive du projet sur votre disque dur,  
 Ou clonez le repo avec cette commande :  
-```
-git clone https://github.com/SachaaBoris/OC_04_ChessTournament.git path\to\your\folder\here  
-```
+    ```
+    git clone https://github.com/SachaaBoris/OC_04_ChessTournament.git path\to\your\folder\here  
+    ```
   
 2. Installer l'environnement virtuel :  
-Depuis votre console favorite, naviguez jusqu'au repertoire de l'application  
-Pour créer l'environnement virtuel rentrez la ligne de commande : `py -m venv .chess/venv`  
-Activez ensuite l'environnement virtuel en rentrant la commande : `chess\venv\Scripts\activate`  
-Installer les requirements du projet avec la commande : `py -m pip install -r requirements.txt`  
+    Depuis votre console favorite, naviguez jusqu'au repertoire de l'application  
+    Pour créer l'environnement virtuel rentrez la ligne de commande : `py -m venv .chess/venv`  
+    Activez ensuite l'environnement virtuel en rentrant la commande : `chess\venv\Scripts\activate`  
+    Installer les requirements du projet avec la commande : `py -m pip install -r requirements.txt`  
   
 3. Démarrer le script :  
-Toujours dans la console et à la racine du projet, executez le script avec la commande : `py chess`  
+    Toujours dans la console et à la racine du projet, executez le script avec la commande : `py chess`  
   
 4. Exporter un nouveau rapport flake8 *(optionnel)* :  
-Toujours dans la console et à la racine du projet, executez la commande :  
-```
-py -m flake8 chess --exclude venv --format=html --htmldir=flake-report --max-line-length=119
-```
-Flake va parcourir le projet et exporter un rapport html dans le dossier flake-report,  
-pour le visionner, lancez l'index.htm dans votre navigateur favoris.  
+    Toujours dans la console et à la racine du projet, executez la commande :  
+    ```
+    py -m flake8 chess --exclude venv --format=html --htmldir=flake-report --max-line-length=119
+    ```
+    Flake va parcourir le projet et exporter un rapport html dans le dossier flake-report,  
+    pour le visionner, lancez l'index.htm dans votre navigateur favoris.  
   
 # ● Caractéristiques  
 Un menu simple avec en-têtes pour naviguer efficacement sans jamais être perdu  
