@@ -1,7 +1,5 @@
-_VenvActivate.au3
-_VenvCreate+Activate+Requirements.au3
-_Launcher.bat
-_cmd.bat
+*.au3
+*.bat
 _WorkDir/*
 .idea/*
 venv/*
@@ -12,10 +10,6 @@ __pycache__/*
 **/__pycache__/
 __pycache__
 */__pycache__/*
-chess/_cmd.bat
-chess/_Launcher.bat
-chess/_VenvActivate.au3
-chess/_VenvCreate+Activate+Requirements.au3
 chess/__pycache__/*
 chess/requirements.txt
 chess/data/playersbkp.json
