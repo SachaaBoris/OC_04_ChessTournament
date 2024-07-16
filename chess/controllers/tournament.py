@@ -195,6 +195,7 @@ class TournamentController:
         return tour_players
     
     def get_round_score_automatic(self):
+        """ returns bool """
         while True:
             automatic = str(self.view.user_prompts(22, ["", ""])).lower()
             if automatic in ["y", "yes", "o", "oui"]:
@@ -263,34 +264,6 @@ class TournamentController:
             self.start_tournament(tournament)
         else:
             self.resume_tournament(tournament)
-    
-    
-    def db_get_tournament_data(self): ### POSSIBLEMENT A DETRUIRE 
-        """ returns list of tournament_details """
-        tournament_data = TournamentDataManager().get_tournament_data()
-        tour_title = tournament_data[0].get('tournament_name')
-        tour_city = tournament_data[0].get('city')
-        tour_desc = tournament_data[0].get('description')
-        tour_players = tournament_data[0].get('players')
-        tour_rounds = tournament_data[0].get('rounds')
-        tour_round = tournament_data[0].get('round')
-        tour_rounds_results = tournament_data[0].get('rounds_results')
-        tour_final_results = tournament_data[0].get('final_results')
-        tour_beg_date = tournament_data[0].get('beg_date')
-        tour_end_date = tournament_data[0].get('end_date')
-        tournament_details = [
-            tour_title, 
-            tour_city, 
-            tour_desc, 
-            tour_players, 
-            tour_rounds, 
-            tour_round, 
-            tour_rounds_results, 
-            tour_final_results, 
-            tour_beg_date, 
-            tour_end_date
-        ]
-        return tournament_details
     
     def start_tournament(self, tournament):
         """ démarre le tournoi """   
@@ -423,7 +396,7 @@ class TournamentController:
                             additional_info=(tour_name, tour_city, tour_beg, tour_end))
         self.view.user_prompts(19, ["", ""])
     
-    def tournament_display(self, tour_title, tour_city, tour_round, current_round):
+    def tournament_display(self, tour_title, tour_city, tour_round, tour_rounds, current_round):
         self.view.clear_screen()
         self.view.menu_header(8)
         self.view.notify_alert(17, [tour_title, tour_city])
@@ -446,20 +419,8 @@ class TournamentController:
         number_of_matches = int(len(tour_players)/2)
         current_round_index = tour_round - 1
         current_round = tour_rounds_results[current_round_index]
-        current_date = datetime.now().strftime("%Y-%m-%d_%H:%M")
         
-        update = False
-        for match in current_round[1]:
-            # insert de la date de début de round
-            if match[0][0] == "":
-                update = True
-                match[0][0] = current_date
-        
-        if update :
-            tournament.rounds_results[current_round_index] = current_round
-            TournamentDataManager().update_tournament(tournament)
-        
-        self.tournament_display(tour_title, tour_city, tour_round, current_round[1])
+        self.tournament_display(tour_title, tour_city, tour_round, tour_rounds, current_round[1])
         
         automatic = False
         if all(match[2][0] == -1 for match in current_round[1]):
@@ -474,6 +435,7 @@ class TournamentController:
         
         if automatic:
             # remplissage automatique des scores
+            current_date = datetime.now().strftime("%Y-%m-%d_%H:%M")
             for match in current_round[1]:
                 if match[0][1] == "":
                     score_1 = random.choice([0.0, 0.5, 1.0])
@@ -487,7 +449,7 @@ class TournamentController:
         
         while any(match[0][1] == "" for match in current_round[1]):
             # remplissage manuel des scores de chaque match d'un round
-            self.tournament_display(tour_title, tour_city, tour_round, current_round[1])
+            self.tournament_display(tour_title, tour_city, tour_round, tour_rounds, current_round[1])
             
             while True:
                 max_index = len(current_round[1])
@@ -502,27 +464,31 @@ class TournamentController:
             
             selected_match = current_round[1][match_index]
             
-            while True:
-                try:
-                    match_p1 = f"{selected_match[1][0][1]} {selected_match[1][0][2]}"
-                    match_p2 = f"{selected_match[1][1][1]} {selected_match[1][1][2]}"
-                    score = int(self.view.user_prompts(25, [f"{match_p1}", f"{match_p2}"]))
-                    if 0 <= score <= 2:
-                        break
-                    else:
+            if selected_match[0][0] == "":
+                ''' start a match '''
+                selected_match[0][0] = datetime.now().strftime('%Y-%m-%d_%H:%M')
+            else:
+                while True:
+                    try:
+                        match_p1 = f"{selected_match[1][0][1]} {selected_match[1][0][2]}"
+                        match_p2 = f"{selected_match[1][1][1]} {selected_match[1][1][2]}"
+                        score = int(self.view.user_prompts(25, [f"{match_p1}", f"{match_p2}"]))
+                        if 0 <= score <= 2:
+                            break
+                        else:
+                            self.view.invalid_input(15, ["", ""])
+                    except ValueError:
                         self.view.invalid_input(15, ["", ""])
-                except ValueError:
-                    self.view.invalid_input(15, ["", ""])
-            
-            # Mettre à jour les scores et la date de fin de match
-            selected_match[2][0] = 0.5 if score == 0 else 1.0 if score == 1 else 0.0
-            selected_match[2][1] = 0.5 if score == 0 else 1.0 if score == 2 else 0.0
-            selected_match[0][1] = datetime.now().strftime('%Y-%m-%d_%H:%M')
-            
+                
+                # Mettre à jour les scores et la date de fin de match
+                selected_match[2][0] = 0.5 if score == 0 else 1.0 if score == 1 else 0.0
+                selected_match[2][1] = 0.5 if score == 0 else 1.0 if score == 2 else 0.0
+                selected_match[0][1] = datetime.now().strftime('%Y-%m-%d_%H:%M')
+                
             tournament.rounds_results[current_round_index] = current_round
             TournamentDataManager().update_tournament(tournament)
         
-        self.tournament_display(tour_title, tour_city, tour_round, current_round[1])
+        self.tournament_display(tour_title, tour_city, tour_round, tour_rounds, current_round[1])
         if tour_round < tour_rounds:
             self.view.user_prompts(17, ["", ""])
             self.prepare_next_round(tournament)

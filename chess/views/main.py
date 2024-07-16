@@ -1,6 +1,7 @@
 import os
 import time
 from prettytable import PrettyTable
+from datetime import datetime
 
 
 class MainView:
@@ -55,9 +56,9 @@ class MainView:
         if type =="tournament":  # affiche le menu de gestion des tournois
             self.menu_header(3)
             texts = [
-                "1 - Ajouter un joueur",
-                "2 - Modifier un joueur",
-                "3 - Voir la liste des joueurs",
+                "1 - Préparer un tournoi",
+                "2 - Lancer / Reprendre un tournoi",
+                "3 - Voir la liste des tournois",
                 "4 - Revenir au menu principal\n"
             ]
         
@@ -191,9 +192,9 @@ class MainView:
         
         if table_type in ["round_matches", "match_list"]:
             if table_type == "round_matches":
-                my_table = PrettyTable(["ID", "Joueur 1", "Score J1", "Score J2", "Joueur 2"])
+                my_table = PrettyTable(["ID", "Joueur 1", "Score J1", "Score J2", "Joueur 2", "Durée"])
             else:
-                my_table = PrettyTable(["Début", "Joueur 1", "Score J1", "Score J2", "Joueur 2", "Fin"])
+                my_table = PrettyTable(["Début", "Joueur 1", "Score J1", "Score J2", "Joueur 2", "Fin", "Durée"])
             
             for index, data in enumerate(page_data):
                 match_id = index + 1
@@ -203,10 +204,30 @@ class MainView:
                 match_p2 = f"{data[1][1][1]} {data[1][1][2]}"
                 beg_date = data[0][0]
                 end_date = data[0][1]
-                if table_type == "match_list":
-                    my_table.add_row([beg_date, match_p1, p1_score, p2_score, match_p2, end_date])
+                
+                if end_date != "":
+                    start_datetime = datetime.strptime(beg_date, "%Y-%m-%d_%H:%M")
+                    end_datetime = datetime.strptime(end_date, "%Y-%m-%d_%H:%M")
+                    duration_calc = end_datetime - start_datetime
+                    hours, remainder = divmod(duration_calc.total_seconds(), 3600)
+                    minutes, _ = divmod(remainder, 60)
+                    duration = f"{int(hours):02}:{int(minutes):02}"
+                    beg_date = f"{beg_date.split('_')[1]}"
+                    end_date = f"{end_date.split('_')[1]}"
                 else:
-                    my_table.add_row([match_id, match_p1, p1_score, p2_score, match_p2])
+                    
+                    if beg_date == "":
+                        beg_date = "X"
+                        end_date = "X"
+                        duration = "X" if table_type == "match_list" else "Start match ?"
+                    else:
+                        beg_date = f"Started @ {beg_date.split('_')[1]}"
+                        duration = "X" if table_type == "match_list" else beg_date
+                
+                if table_type == "match_list":
+                    my_table.add_row([beg_date, match_p1, p1_score, p2_score, match_p2, end_date, duration])
+                else:
+                    my_table.add_row([match_id, match_p1, p1_score, p2_score, match_p2, duration])
         
         elif table_type in ["player_list", "pick_player"]:
             if table_type == "player_list":
