@@ -16,6 +16,7 @@ chess/data/playersbkp.json
 chess/data/playersbkp.json
 chess/data/reports/*
 chess/data/tournaments/*
+chess/data/tournaments.json
 chess/data/pending_tournament.json
 chess/data/players.json
 chess/data/registered.json
