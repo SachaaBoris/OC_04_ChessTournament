@@ -4,8 +4,7 @@ WIP !!!  :construction_worker:
   
 # ● Description du projet  
 Ce programme répond à la demande d'une amie pour aider son club d'échecs dans la gestion de ses tournois.  
-L'objectif est de pouvoir sauvegarder et maintenir une base de données de joueurs et une base de données de tournois.  
-Il permet d'ajouter des joueurs, editer des joueurs, lister les joueurs, créer des tournois, ajouter des joueurs à un tournoi, rentrer les scores de chaque match, pour chaque round d'un tournoi, reprendre un tournoi laissé en suspend, suivre les scores des joueurs, lister les tournois et revoir les données enregistrées des tournois passés ou en cours.
+L'objectif est de pouvoir sauvegarder et maintenir une base de données de joueurs et une base de données de tournois. Il permet d'ajouter des joueurs, editer des joueurs, lister les joueurs, créer des tournois, ajouter des joueurs à un tournoi, rentrer les scores de chaque match, pour chaque round d'un tournoi, reprendre un tournoi laissé en suspend, suivre les scores des joueurs, lister les tournois et revoir les données enregistrées des tournois passés ou en cours.
   
 # ● Comment installer et démarrer l'application  
 1. Prérequis :  
@@ -25,7 +24,7 @@ Installer les requirements du projet avec la commande : `py -m pip install -r re
 3. Démarrer le script :  
 Toujours dans la console et à la racine du projet, executez le script avec la commande : `py chess`  
   
-4. Exporter un nouveau rapport flake8 :  
+4. Exporter un nouveau rapport flake8 *(optionnel)* :  
 Toujours dans la console et à la racine du projet, executez la commande :  
 ```
 py -m flake8 chess --exclude venv --format=html --htmldir=flake-report --max-line-length=119
