@@ -31,6 +31,10 @@ class MainView:
         message = texts.get(index, "Invalid header index")
         print("Chess Tournament Manager v0.1\n" + f"{message}")
 
+    def new_header(self, index):
+        self.clear_screen()
+        self.menu_header(index)
+
     def display_menu(self, type):
         """ affiche le menu du type voulu """
 

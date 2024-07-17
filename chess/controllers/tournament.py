@@ -84,8 +84,7 @@ class TournamentController:
 
     def create_tournament(self):
         """ menu de creation de tournoi """
-        self.view.clear_screen()
-        self.view.menu_header(7)
+        self.view.new_header(8)
         new_tournament = self.get_tournament_details()
         tournament = TournamentDataManager().initialize_tournament_list(new_tournament)
         TournamentDataManager().save_new_tournament(tournament)
@@ -216,8 +215,7 @@ class TournamentController:
 
     def can_resume_tournament(self):
         """ verifie le statut de pending_tournament """
-        self.view.clear_screen()
-        self.view.menu_header(8)
+        self.view.new_header(8)
 
         file_path = self.data_file_exists("tournaments")
         if file_path[0]:
@@ -235,8 +233,7 @@ class TournamentController:
 
     def pick_tournament(self, pending_tournaments):
         """ choisir un tournoi à reprendre """
-        self.view.clear_screen()
-        self.view.menu_header(8)
+        self.view.new_header(8)
         self.view.display_table("pick_tournament", pending_tournaments)
         while True:
             try:
@@ -339,9 +336,8 @@ class TournamentController:
         return results
 
     def prepare_next_round(self, tournament):
-        """ prepares next round """
-        self.view.clear_screen()
-        self.view.menu_header(8)
+        """ prepare le prochain round """
+        self.view.new_header(8)
         tour_rounds_results = tournament.rounds_results
         players_ranks = self.players_ranks(tour_rounds_results)
 
@@ -396,8 +392,7 @@ class TournamentController:
         tournament.end_date = tour_end
 
         TournamentDataManager().update_tournament(tournament)
-        self.view.clear_screen()
-        self.view.menu_header(8)
+        self.view.new_header(8)
         self.view.display_table(
             "tournament_final_rank", players_ranks,
             additional_info=(tour_name, tour_city, tour_beg, tour_end)
@@ -405,8 +400,7 @@ class TournamentController:
         self.view.user_prompts(19, ["", ""])
 
     def tournament_display(self, tour_title, tour_city, tour_round, tour_rounds, current_round):
-        self.view.clear_screen()
-        self.view.menu_header(8)
+        self.view.new_header(8)
         self.view.notify_alert(17, [tour_title, tour_city])
         self.view.notify_alert(18, [tour_round, tour_rounds])
         self.view.display_table("round_matches", current_round)

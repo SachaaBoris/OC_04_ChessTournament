@@ -68,8 +68,7 @@ class ReportController:
 
     def list_all_players(self):
         """ lister tous les joueurs """
-        self.view.clear_screen()
-        self.view.menu_header(9)
+        self.view.new_header(9)
         if self.data_file_exists("players"):
             # option pour ranger par "last_name", "player_id", "birth_date"...
             players_list = PlayerDataManager().list_players("last_name")
@@ -85,8 +84,7 @@ class ReportController:
             self.view.notify_alert(16, ["", ""])
             self.view.user_prompts(0, ["", ""])
         else:
-            self.view.clear_screen()
-            self.view.menu_header(9)
+            self.view.new_header(9)
             self.view.notify_alert(11, ['data/players.json', ""])
             self.view.user_prompts(0, ["", ""])
 
@@ -116,8 +114,7 @@ class ReportController:
         total_pages = (total_players // page_size) + (1 if total_players % page_size != 0 else 0)
 
         for page in range(total_pages):
-            self.view.clear_screen()
-            self.view.menu_header(9)
+            self.view.new_header(9)
             start_index = page * page_size
             end_index = start_index + page_size
             page_data = players_list[start_index:end_index]
@@ -130,8 +127,7 @@ class ReportController:
         """ créé des pages pour l'affichage des tableaux de rounds """
         total_pages = len(round_results)
         for page in range(total_pages):
-            self.view.clear_screen()
-            self.view.menu_header(13)
+            self.view.new_header(13)
             self.view.notify_alert(22, [tour_info[0], tour_info[1]])
             self.view.notify_alert(23, [page + 1, ""])
             self.view.display_table("match_list", round_results[page][1])
@@ -165,8 +161,7 @@ class ReportController:
     def list_all_tournaments(self):
         """ lister les tournois """
         tournaments = self.list_tournaments()
-        self.view.clear_screen()
-        self.view.menu_header(10)
+        self.view.new_header(10)
         n_tour = len(tournaments)
         if n_tour > 0:
             self.view.display_table("tournament_list", tournaments)
@@ -178,8 +173,7 @@ class ReportController:
     def get_tournament_info(self, mode):
         """ extraire les data d'un tournoi """
         tournaments = self.list_tournaments()
-        self.view.clear_screen()
-        self.view.menu_header(10)
+        self.view.new_header(10)
         n_tour = len(tournaments)
         if n_tour > 0:
             self.view.display_table("pick_tournament", tournaments)
@@ -188,13 +182,12 @@ class ReportController:
                     choice = int(self.view.user_prompts(20, ["", ""]))
                     if 1 <= choice <= n_tour:
                         choice = choice - 1
-                        self.view.clear_screen()
                         tournament_data = [tournaments[choice]]
                         if mode == "tour":
-                            self.view.menu_header(11)
+                            self.view.new_header(11)
                             self.view.display_table("tournament_list", tournament_data)
                         elif mode == "players":
-                            self.view.menu_header(12)
+                            self.view.new_header(12)
                             for data in tournament_data:
                                 players_list = data['players']
 
@@ -207,7 +200,7 @@ class ReportController:
                                 self.view.display_table("player_list", players_list)
 
                         elif mode == "matches":
-                            self.view.menu_header(13)
+                            self.view.new_header(13)
                             for data in tournament_data:
                                 round_results = data['rounds_results']
 
@@ -216,8 +209,7 @@ class ReportController:
                             final_results = tournament_data[0].get('final_results')
                             if len(final_results) > 0:
                                 self.view.user_prompts(18, ["", ""])
-                                self.view.clear_screen()
-                                self.view.menu_header(13)
+                                self.view.new_header(13)
                                 tour_beg = tournament_data[0].get('beg_date')
                                 tour_end = tournament_data[0].get('end_date')
                                 self.view.display_table(

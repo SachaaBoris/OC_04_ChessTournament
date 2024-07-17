@@ -74,8 +74,7 @@ class PlayerController:
 
     def create_player(self):
         """ menu de creation de joueur """
-        self.view.clear_screen()
-        self.view.menu_header(5)
+        self.view.new_header(5)
         player_id, first_name, last_name, birth_date = self.get_player_details("create")
         player = PlayerModel(player_id, first_name, last_name, birth_date)
         PlayerDataManager().save_new_player(player)
@@ -88,17 +87,16 @@ class PlayerController:
         file_path = self.data_file_exists(file_name)
         if file_path[0]:
             if not self.data_file_empty(file_name):
-                self.view.clear_screen()
-                self.view.menu_header(6)
+                self.view.new_header(6)
                 old_player = self.pick_a_player("edit", 1)
                 if len(old_player) > 0:
                     op_id, op_first_name, op_last_name, op_birth_date = old_player
-                    self.view.clear_screen()
-                    self.view.menu_header(6)
+                    self.view.new_header(6)
                     self.view.notify_alert(30, [f'{op_id}, {op_first_name}', f'{op_last_name}, {op_birth_date}'])
                     new_player = self.get_player_details("edit")
                     np_id, np_first_name, np_last_name, np_birth_date = new_player
                     if any(var != "" for var in [np_id, np_first_name, np_last_name, np_birth_date]):
+                        # mettre à jour uniquement les données modifiées
                         np_id = op_id if np_id == "" else np_id
                         np_first_name = op_first_name if np_first_name == "" else np_first_name
                         np_last_name = op_last_name if np_last_name == "" else np_last_name
@@ -123,18 +121,16 @@ class PlayerController:
                 self.view.user_prompts(0, ["", ""])
 
         else:
-            self.view.clear_screen()
-            self.view.menu_header(6)
+            self.view.new_header(6)
             self.view.notify_alert(11, ["", ""])
             self.view.user_prompts(0, ["", ""])
 
     def pick_a_player_header(self, values, mode):
-        self.view.clear_screen()
         if mode == "tournament":
-            self.view.menu_header(9)
+            self.view.new_header(9)
             self.view.notify_alert(27, [values[0], values[1]])
         else:
-            self.view.menu_header(6)
+            self.view.new_header(6)
 
         self.view.notify_alert(25, [values[2], values[3]])
 
@@ -363,7 +359,6 @@ class PlayerController:
         if file_path[0]:
             ReportController().list_all_players()
         else:
-            self.view.clear_screen()
-            self.view.menu_header(9)
+            self.view.new_header(9)
             self.view.notify_alert(11, ['data/players.json', ""])
             self.view.user_prompts(0, ["", ""])
