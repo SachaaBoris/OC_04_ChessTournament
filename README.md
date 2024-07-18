@@ -10,7 +10,7 @@ Avoir Python 3 installé
 Avoir téléchargé et dézipé l'archive du projet sur votre disque dur,  
 Ou clonez le repo avec cette commande :  
     ```
-    git clone https://github.com/SachaaBoris/OC_04_ChessTournament.git path\to\your\folder\here  
+    git clone https://github.com/SachaaBoris/OC_04_ChessTournament.git "path\to\local\folder"  
     ```
   
 2. Installer l'environnement virtuel :  
