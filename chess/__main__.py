@@ -1,6 +1,8 @@
 from views.logo import ChessLogo
 from controllers.main import MainController
+from config_loader import FAVORITE_COLOR
 import os.path
+import os
 
 
 def main():
@@ -24,4 +26,8 @@ def main():
 
 if __name__ == '__main__':
     ''' programme principal '''
+    cmd = 'mode 130,35'
+    os.system(cmd)
+    cmd = f'color {FAVORITE_COLOR}'
+    os.system(cmd)
     main()

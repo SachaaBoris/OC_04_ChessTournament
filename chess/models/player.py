@@ -1,9 +1,10 @@
 import os
+from views.main import MainView
 from tinydb import TinyDB, Query
 
 
 class PlayerModel:
-    """ Model pour les joueurs """
+    """Model pour les joueurs"""
 
     def __init__(self, player_id, first_name, last_name, birth_date):
         self.player_id = player_id
@@ -21,9 +22,11 @@ class PlayerModel:
 
 
 class PlayerDataManager:
-    """ Data Management des joueurs """
+    """Data Management des joueurs"""
 
     def __init__(self):
+        """Initialisation"""
+        self.view = MainView()
         if os.path.exists("data"):
             db_path = 'data/players.json'
         else:
@@ -36,29 +39,29 @@ class PlayerDataManager:
         self.players_table = self.db.table('players')
 
     def id_exists(self, player_id):
-        """ returns bool """
+        """Returns bool"""
         player_query = Query()
         return self.players_table.contains(player_query.player_id == player_id)
 
     def save_new_player(self, new_player):
-        """ sauvegarder le nouveau joueur """
+        """Sauvegarder le nouveau joueur"""
         self.players_table.insert(new_player.to_dict())
 
     def update_player(self, edited_player):
-        """ mettre à jour les nouvelles data joueur """
+        """Mettre à jour les nouvelles data joueur"""
         player_dict = edited_player.to_dict()
         player_id = player_dict['player_id']
         player_query = Query()
         self.players_table.update(player_dict, player_query.player_id == player_id)
 
     def replace_player(self, edited_player, old_id):
-        """ remplacer les data d'un joueur """
+        """Remplacer les data d'un joueur"""
         player_dict = edited_player.to_dict()
         player_query = Query()
         self.players_table.update(player_dict, player_query.player_id == old_id)
 
     def save_player_list(self, players_list):
-        """ sauvegarder la liste de joueurs """
+        """sauvegarder la liste de joueurs"""
         for player_data in players_list:
             player_id, first_name, last_name, birth_date = player_data
             player = PlayerModel(player_id, first_name, last_name, birth_date)
@@ -68,7 +71,7 @@ class PlayerDataManager:
                 self.save_new_player(player)
 
     def list_players(self, order):
-        """ retourne la liste des joueurs dans l'ordre alphabetique """
+        """Retourne la liste des joueurs dans l'ordre alphabetique"""
         players_list = self.players_table.all()
         sorted_list = sorted(players_list, key=lambda x: x.get(order, "").lower())
         return sorted_list

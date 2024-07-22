@@ -5,13 +5,13 @@ from controllers.report import ReportController
 
 
 class MainController:
-    ''' Contrôleur principal '''
+    """Contrôleur principal"""
 
     def __init__(self):
         self.view = MainView()
 
     def main_menu(self):
-        ''' menu principal du programme '''
+        """Menu principal du programme"""
         invalid_input = 0
         while True:
             if invalid_input == 0:

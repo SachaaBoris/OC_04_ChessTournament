@@ -2,6 +2,7 @@ from views.main import MainView
 from models.player import PlayerModel
 from models.player import PlayerDataManager
 from controllers.report import ReportController
+from config_loader import PLAYER_LIST_ORDER
 from datetime import datetime, timedelta
 import random
 import string
@@ -17,7 +18,7 @@ class PlayerController:
         self.view = MainView()
 
     def player_menu(self):
-        """ menu de gestion des joueurs """
+        """Menu de gestion des joueurs"""
         invalid_input = 0
         while True:
             if invalid_input == 0:
@@ -42,7 +43,7 @@ class PlayerController:
                 self.view.invalid_input(0, ["", ""])
 
     def data_file_exists(self, file_name):
-        """ returns [bool, path] """
+        """Returns [bool, path]"""
         if os.path.exists("data"):
             file_path = f'data/{file_name}.json'
         else:
@@ -53,7 +54,7 @@ class PlayerController:
             return [False, '']
 
     def data_file_empty(self, file_name):
-        """ returns bool """
+        """Returns bool"""
         if os.path.exists("data"):
             file_path = f'data/{file_name}.json'
         else:
@@ -73,7 +74,7 @@ class PlayerController:
                 return False
 
     def create_player(self):
-        """ menu de creation de joueur """
+        """Menu de creation de joueur"""
         self.view.new_header(5)
         player_id, first_name, last_name, birth_date = self.get_player_details("create")
         player = PlayerModel(player_id, first_name, last_name, birth_date)
@@ -82,7 +83,7 @@ class PlayerController:
         self.view.user_prompts(0, ["", ""])
 
     def edit_player(self):
-        """ menu d'edition de joueur """
+        """Menu d'edition de joueur"""
         file_name = "players"
         file_path = self.data_file_exists(file_name)
         if file_path[0]:
@@ -110,11 +111,7 @@ class PlayerController:
                         self.view.notify_alert(4, ["", ""])
                     else:
                         self.view.notify_alert(29, ["", ""])
-
-                else:
-                    self.view.notify_alert(29, ["", ""])
-
-                self.view.user_prompts(0, ["", ""])
+                        self.view.user_prompts(0, ["", ""])
 
             else:
                 self.view.notify_alert(11, ["", ""])
@@ -135,9 +132,8 @@ class PlayerController:
         self.view.notify_alert(25, [values[2], values[3]])
 
     def pick_a_player(self, mode, number_of_players):
-        ''' returns a player list or a player's data '''
-        players_list = PlayerDataManager().list_players("last_name")
-        # option pour ranger par "last_name", "player_id", "birth_date"...
+        """Returns a player list or a player's data"""
+        players_list = PlayerDataManager().list_players(PLAYER_LIST_ORDER)
         page_size = 20
         total_players = len(players_list)
         total_pages = (total_players // page_size) + (1 if total_players % page_size != 0 else 0)
@@ -152,15 +148,25 @@ class PlayerController:
                 self.view.display_table("pick_player", page_data)
                 player_nbr = len(page_data)
                 while True:
-                    values = [player_nbr]
                     if mode == "edit":
-                        values.append("modifier")
+                        values = [f"{player_nbr}]) de joueur à modifier"]
                     else:
-                        values.append("ajouter")
+                        values = [f"{player_nbr}]) de joueur à ajouter"]
 
-                    bdd_player = str(self.view.user_prompts(27, values)).lower()
+                    if len(tour_players) < number_of_players:
+                        if page + 1 == total_pages:
+                            values.append("retourner au menu précédent")
+                            bdd_player = str(self.view.user_prompts(27, values)).lower()
+                        else:
+                            values.append("passer à la page suivante")
+                            bdd_player = str(self.view.user_prompts(27, values)).lower()
+
+                    else:
+                        break
+
                     if bdd_player == "":
                         break
+
                     else:
                         try:
                             bdd_player = int(bdd_player)
@@ -188,19 +194,30 @@ class PlayerController:
         return tour_players
 
     def vali_date(self, date_input):
-        """ returns date input normalisée, is_valid bool, notify_index int """
+        """Returns date input normalisée, is_valid bool, notify_index int"""
         formats = [
             r"(\d{4})(\d{2})(\d{2})",
             r"(\d{4}) (\d{2}) (\d{2})",
             r"(\d{4})-(\d{2})-(\d{2})",
             r"(\d{4})\.(\d{2})\.(\d{2})",
             r"(\d{4}),(\d{2}),(\d{2})",
-            r"(\d{4})/(\d{2})/(\d{2})"
+            r"(\d{4})/(\d{2})/(\d{2})",
+            r"(\d{2})(\d{2})(\d{4})",
+            r"(\d{2}) (\d{2}) (\d{4})",
+            r"(\d{2})-(\d{2})-(\d{4})",
+            r"(\d{2})\.(\d{2})\.(\d{4})",
+            r"(\d{2}),(\d{2}),(\d{4})",
+            r"(\d{2})/(\d{2})/(\d{4})"
         ]
         for fmt in formats:
             match = re.match(fmt, date_input)
             if match:
-                year, month, day = map(int, match.groups())
+                groups = match.groups()
+                if len(groups[0]) == 4:  # Format YYYY-MM-DD
+                    year, month, day = map(int, groups)
+                else:  # Format DD-MM-YYYY
+                    day, month, year = map(int, groups)
+
                 try:
                     birth_date = datetime(year, month, day)
                     today = datetime.now()
@@ -222,10 +239,19 @@ class PlayerController:
         return date_input, False, 3
 
     def get_player_details(self, mode):
-        """ returns player_id, first_name, last_name, birth_date """
+        """Returns player_id, first_name, last_name, birth_date"""
         if mode == "edit":
             self.view.notify_alert(28, ["", ""])
 
+        player_id = self.player_id_prompt(mode)
+        first_name = self.name_prompt(mode, 2)
+        last_name = self.name_prompt(mode, 3)
+        birth_date = self.birth_prompt(mode)
+
+        return player_id, first_name, last_name, birth_date
+
+    def player_id_prompt(self, mode):
+        """Returns player_id"""
         while True:
             player_id = self.view.user_prompts(1, ["", ""]).upper()
             if re.match(r"[A-Z]{2}\d{5}", player_id) and len(player_id) == 7:
@@ -248,34 +274,28 @@ class PlayerController:
                 else:
                     self.view.invalid_input(6, ["", ""])
 
+        return player_id
+
+    def name_prompt(self, mode, index):
+        """Returns player name"""
         while True:
-            first_name = self.view.user_prompts(2, ["", ""])
-            if first_name and first_name.replace("-", "").isalpha():
+            name = self.view.user_prompts(index, ["", ""])
+            if name and name.replace("-", "").isalpha():
                 break
             else:
                 if mode == "edit":
-                    if first_name == "":
+                    if name == "":
                         break
                     else:
-                        self.view.invalid_input(1, ["", ""])
+                        self.view.invalid_input(index - 1, ["", ""])
 
                 else:
-                    self.view.invalid_input(1, ["", ""])
+                    self.view.invalid_input(index - 1, ["", ""])
 
-        while True:
-            last_name = self.view.user_prompts(3, ["", ""])
-            if last_name and last_name.replace("-", "").isalpha():
-                break
-            else:
-                if mode == "edit":
-                    if last_name == "":
-                        break
-                    else:
-                        self.view.invalid_input(2, ["", ""])
+        return name
 
-                else:
-                    self.view.invalid_input(2, ["", ""])
-
+    def birth_prompt(self, mode):
+        """Returns player birth date"""
         while True:
             birth_date = self.view.user_prompts(4, ["", ""])
             if mode != "edit":
@@ -297,10 +317,10 @@ class PlayerController:
                     else:
                         self.view.invalid_input(valid_date[2], ["", ""])
 
-        return player_id, first_name, last_name, birth_date
+        return birth_date
 
     def generate_random_id(self):
-        """ génère un ID au format XX##### """
+        """Génère un ID au format XX#####"""
         while True:
             letters = ''.join(random.choices(string.ascii_uppercase, k=2))
             digits = ''.join(random.choices(string.digits, k=5))
@@ -309,7 +329,7 @@ class PlayerController:
                 return player_id
 
     def generate_random_date(self):
-        """ génère une date aléatoire entre -8 et -120 ans """
+        """Génère une date aléatoire entre -8 et -120 ans"""
         current_year = datetime.now().year
         start_year = current_year - 120
         end_year = current_year - 8
@@ -321,7 +341,7 @@ class PlayerController:
         return random_date.strftime("%Y-%m-%d")
 
     def generate_random_players(self, number_of_players):
-        """ returns list of players """
+        """Returns list of players"""
         tournament_players = []
         file_path = self.data_file_exists("randomizer")
         if file_path[0]:
@@ -354,7 +374,7 @@ class PlayerController:
             return []
 
     def list_all_players(self):
-        """ lists all players """
+        """Lists all players"""
         file_path = self.data_file_exists("players")
         if file_path[0]:
             ReportController().list_all_players()

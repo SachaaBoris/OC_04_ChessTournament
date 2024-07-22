@@ -3,11 +3,12 @@ from tinydb import TinyDB, Query
 
 
 class Tournament:
-    """ Model pour les tournois """
+    """Model pour les tournois"""
 
     def __init__(
             self, tournament_name, city, description, players, rounds, round,
             rounds_results, final_results, beg_date, end_date):
+        """Initialisation"""
         self.tournament_name = tournament_name
         self.city = city
         self.description = description
@@ -20,6 +21,7 @@ class Tournament:
         self.end_date = end_date
 
     def to_dict(self):
+        """Ajoute au dictionnaire"""
         return {
             "tournament_name": self.tournament_name,
             "city": self.city,
@@ -35,9 +37,10 @@ class Tournament:
 
 
 class TournamentDataManager:
-    """ Data Management du tournoi """
+    """Data Management du tournoi"""
 
     def __init__(self):
+        """Initialisation"""
         if os.path.exists("data"):
             db_path = 'data/tournaments.json'
         else:
@@ -51,6 +54,7 @@ class TournamentDataManager:
         self.tournament_table = self.db.table('tournaments')
 
     def initialize_tournament_dict(self, data):
+        """Initialise le tournoi depuis un dictionnaire"""
         tournament = Tournament(
             tournament_name=data['tournament_name'],
             city=data['city'],
@@ -66,6 +70,7 @@ class TournamentDataManager:
         return tournament
 
     def initialize_tournament_list(self, data):
+        """Initialise le tournoi depuis une liste"""
         tournament = Tournament(
             tournament_name=data[0],
             city=data[1],
@@ -80,13 +85,40 @@ class TournamentDataManager:
         )
         return tournament
 
-    def save_new_tournament(self, tournament_data):  # faire le table insert a partir de l'objet tournament.to dict
-        """ sauvegarder le nouveau tournoi """
-        tournament_dict = Tournament.to_dict(tournament_data)
+    def save_new_tournament(self, tournament):
+        """Sauvegarder le nouveau tournoi"""
+        tournament_dict = tournament.to_dict()
         self.tournament_table.insert(tournament_dict)
 
+    def update_tournament(self, tournament):
+        """Mettre à jour les data du tournoi"""
+        if not isinstance(tournament, Tournament):
+            tournament = self.initialize_tournament(tournament)
+
+        tournament_dict = tournament.to_dict()
+
+        self.tournament_table.update(
+            tournament_dict,
+            self.matching_tournament(tournament)
+        )
+
+    def matching_tournament(self, tournament):
+        """Compare les tournois indépendamment de l'ordre des joueurs"""
+        tournament_players_set = set(tuple(player) for player in tournament.players)
+
+        def _matching(t):  # fonction interne
+            return (
+                t['tournament_name'] == tournament.tournament_name and
+                t['city'] == tournament.city and
+                t['description'] == tournament.description and
+                set(tuple(player) for player in t['players']) == tournament_players_set and
+                t['rounds'] == tournament.rounds
+            )
+
+        return _matching
+
     def has_tournament_started(self):
-        """ returns bool """
+        """Returns bool"""
         existing_tournament = Query()
         pending_tournament = self.tournament_table.search(existing_tournament.beg_date != "")
 
@@ -94,31 +126,19 @@ class TournamentDataManager:
             return True
         return False
 
-    def update_tournament(self, tournament):
-        """ mettre à jour les data du tournoi """
-        if not isinstance(tournament, Tournament):
-            tournament = self.initialize_tournament(tournament)
-
-        tournament_dict = tournament.to_dict()
-        existing_tournament = Query()
-
-        with TinyDB(self.db_path) as db:
-            tournament_table = db.table('tournaments')
-            tournament_table.update(tournament_dict, existing_tournament.tournament_name == tournament.tournament_name)
-
     def list_tournaments(self):
-        """ returns dictionnary """
+        """Returns tournament dictionnary list"""
         return self.tournament_table.all()
 
     def id_exists(self, player_id):
-        """ returns bool """
+        """Returns bool"""
         player_query = Query()
         return self.players_table.contains(player_query.player_id == player_id)
 
     def list_players(self):
-        """ returns dictionnary """
+        """Returns players dictionnary list"""
         return self.players_table.all()
 
     def get_tournament_data(self):
-        """ returns dictionnary """
+        """Returns dictionnary"""
         return self.tournament_table.all()
