@@ -109,6 +109,7 @@ class PlayerController:
                             PlayerDataManager().replace_player(player, op_id)
 
                         self.view.notify_alert(4, ["", ""])
+                        self.view.user_prompts(0, ["", ""])
                     else:
                         self.view.notify_alert(29, ["", ""])
                         self.view.user_prompts(0, ["", ""])
