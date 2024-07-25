@@ -213,6 +213,8 @@ class ReportController:
                 _, players, scores = match
                 p1_id, p2_id = players[0][0], players[1][0]
                 score_p1, score_p2 = scores
+                score_p1 = 0 if score_p1 == -1 else score_p1
+                score_p2 = 0 if score_p2 == -1 else score_p2
 
                 if p1_id not in player_scores:
                     player_scores[p1_id] = 0.0
